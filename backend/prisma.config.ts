@@ -18,6 +18,9 @@ export default defineConfig({
   schema: 'prisma/schema.prisma',
   migrations: {
     path: 'prisma/migrations',
+    // `prisma db seed` runs this (Prisma 7 no longer seeds automatically). tsx
+    // executes the TypeScript seed directly, no precompile step.
+    seed: 'tsx prisma/seed.ts',
   },
   datasource: {
     url: process.env.DATABASE_URL ?? '',

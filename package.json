@@ -1,0 +1,22 @@
+{
+  "name": "praxis-buchung",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Configurable website with online appointment booking for a single physiotherapy practice.",
+  "license": "UNLICENSED",
+  "engines": {
+    "node": ">=22"
+  },
+  "workspaces": [
+    "frontend",
+    "backend"
+  ],
+  "scripts": {
+    "lint": "npm run lint --workspaces --if-present",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "test": "npm run test --workspaces --if-present",
+    "build": "npm run build --workspaces --if-present",
+    "start:frontend": "npm run start --workspace frontend",
+    "start:backend": "npm run start:dev --workspace backend"
+  }
+}

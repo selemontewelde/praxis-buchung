@@ -59,6 +59,9 @@ model Therapist {
   firstName   String
   lastName    String
   title       String? // optional professional/academic title, e.g. "PT"
+  roleDe      String? // role shown on the public team page (German)
+  roleEn      String? // role shown on the public team page (English)
+  photoUrl    String? // path to the portrait in the frontend's served assets
   activeFrom  DateTime  @db.Timestamptz(3) // start of the Active range (UTC)
   activeUntil DateTime? @db.Timestamptz(3) // null = open-ended (still active)
   createdAt   DateTime  @default(now()) @db.Timestamptz(3)
@@ -75,11 +78,13 @@ model Therapist {
 /// A bookable treatment type with a fixed duration (e.g. "Manuelle Therapie",
 /// 20 min). Not a billing position.
 model Service {
-  id          String   @id @default(cuid())
-  name        String   @unique
-  durationMin Int // fixed duration in minutes
-  createdAt   DateTime @default(now()) @db.Timestamptz(3)
-  updatedAt   DateTime @updatedAt @db.Timestamptz(3)
+  id            String   @id @default(cuid())
+  name          String   @unique
+  durationMin   Int // fixed duration in minutes
+  descriptionDe String? // public description shown on the services page (German)
+  descriptionEn String? // public description shown on the services page (English)
+  createdAt     DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt     DateTime @updatedAt @db.Timestamptz(3)
 
   capabilities Capability[]
   appointments Appointment[]

@@ -43,21 +43,57 @@ export const practiceConfig: PracticeConfig = {
         firstName: 'Anna',
         lastName: 'Keller',
         title: 'PT',
+        roleDe: 'Inhaberin & Physiotherapeutin',
+        roleEn: 'Owner & physiotherapist',
+        photoUrl: 'assets/team/anna.svg',
         activeFrom: '2024-01-01',
       },
       {
         key: 'ben',
         firstName: 'Ben',
         lastName: 'Moser',
+        roleDe: 'Physiotherapeut',
+        roleEn: 'Physiotherapist',
+        photoUrl: 'assets/team/ben.svg',
         activeFrom: '2024-01-01',
       },
     ],
 
     services: [
-      { key: 'physiotherapy', name: 'Physiotherapie', durationMin: 30 },
-      { key: 'manual-therapy', name: 'Manuelle Therapie', durationMin: 30 },
-      { key: 'lymph-drainage', name: 'Lymphdrainage', durationMin: 45 },
-      { key: 'massage', name: 'Klassische Massage', durationMin: 20 },
+      {
+        key: 'physiotherapy',
+        name: 'Physiotherapie',
+        durationMin: 30,
+        descriptionDe:
+          'Individuelle Behandlung bei Beschwerden des Bewegungsapparats.',
+        descriptionEn:
+          'Individual treatment for complaints of the musculoskeletal system.',
+      },
+      {
+        key: 'manual-therapy',
+        name: 'Manuelle Therapie',
+        durationMin: 30,
+        descriptionDe:
+          'Gezielte Handgriffe zur Mobilisation von Gelenken und Wirbelsäule.',
+        descriptionEn:
+          'Targeted hands-on techniques to mobilise joints and the spine.',
+      },
+      {
+        key: 'lymph-drainage',
+        name: 'Lymphdrainage',
+        durationMin: 45,
+        descriptionDe:
+          'Sanfte Technik zur Entstauung bei Schwellungen und nach Operationen.',
+        descriptionEn:
+          'Gentle technique to reduce swelling and support post-surgery recovery.',
+      },
+      {
+        key: 'massage',
+        name: 'Klassische Massage',
+        durationMin: 20,
+        descriptionDe: 'Entspannende Massage zur Lockerung verspannter Muskulatur.',
+        descriptionEn: 'Relaxing massage to release tense muscles.',
+      },
     ],
 
     capabilities: [

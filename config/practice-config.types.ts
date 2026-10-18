@@ -86,6 +86,11 @@ export interface SeedTherapist {
   lastName: string;
   /** Optional professional/academic title. */
   title?: string;
+  /** Role shown on the public team page, e.g. "Inhaberin & Physiotherapeutin". */
+  roleDe: string;
+  roleEn: string;
+  /** Path to the portrait, relative to the frontend's served assets. */
+  photoUrl: string;
   /** Start of the Active range as an ISO date string (stored UTC). */
   activeFrom: string;
 }
@@ -96,6 +101,9 @@ export interface SeedService {
   name: string;
   /** Fixed treatment duration in minutes. */
   durationMin: number;
+  /** Public description, shown on the services page. */
+  descriptionDe: string;
+  descriptionEn: string;
 }
 
 /** A therapist (by key) is able to deliver a service (by key). */

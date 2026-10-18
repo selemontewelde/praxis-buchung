@@ -33,14 +33,16 @@ async function main(): Promise<void> {
   try {
     await prisma.$transaction(async (tx) => {
       for (const service of seed.services) {
+        const data = {
+          name: service.name,
+          durationMin: service.durationMin,
+          descriptionDe: service.descriptionDe,
+          descriptionEn: service.descriptionEn,
+        };
         await tx.service.upsert({
           where: { id: service.key },
-          create: {
-            id: service.key,
-            name: service.name,
-            durationMin: service.durationMin,
-          },
-          update: { name: service.name, durationMin: service.durationMin },
+          create: { id: service.key, ...data },
+          update: data,
         });
       }
 
@@ -49,6 +51,9 @@ async function main(): Promise<void> {
           firstName: therapist.firstName,
           lastName: therapist.lastName,
           title: therapist.title ?? null,
+          roleDe: therapist.roleDe,
+          roleEn: therapist.roleEn,
+          photoUrl: therapist.photoUrl,
           activeFrom: new Date(therapist.activeFrom),
         };
         await tx.therapist.upsert({

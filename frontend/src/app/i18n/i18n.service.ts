@@ -45,6 +45,16 @@ export class I18nService {
     );
   }
 
+  /**
+   * Pick a bilingual value (e.g. a service description) for the current language,
+   * falling back to the German one. Reads the language signal, so bindings that
+   * call it re-render on a language switch.
+   */
+  pick(de: string | null | undefined, en: string | null | undefined): string {
+    const value = this._language() === 'de' ? de : en;
+    return value ?? de ?? '';
+  }
+
   private reflectOnDocument(language: Language): void {
     try {
       document.documentElement.lang = language;

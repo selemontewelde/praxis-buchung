@@ -30,9 +30,25 @@ function makeConfig(seed: SeedData): PracticeConfig {
 
 const validSeed: SeedData = {
   therapists: [
-    { key: 'anna', firstName: 'Anna', lastName: 'Keller', activeFrom: '2024-01-01' },
+    {
+      key: 'anna',
+      firstName: 'Anna',
+      lastName: 'Keller',
+      roleDe: 'Physiotherapeutin',
+      roleEn: 'Physiotherapist',
+      photoUrl: 'assets/team/anna.svg',
+      activeFrom: '2024-01-01',
+    },
   ],
-  services: [{ key: 'physio', name: 'Physiotherapie', durationMin: 30 }],
+  services: [
+    {
+      key: 'physio',
+      name: 'Physiotherapie',
+      durationMin: 30,
+      descriptionDe: 'Beschreibung',
+      descriptionEn: 'Description',
+    },
+  ],
   capabilities: [{ therapist: 'anna', service: 'physio' }],
   openingHours: [{ weekday: 'MONDAY', startMin: 480, endMin: 720 }],
   workingHours: [

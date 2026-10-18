@@ -10,6 +10,11 @@ build/
 # Prisma generated client (regenerated on install via `prisma generate`)
 backend/src/generated/
 
+# The practice config is TypeScript source only; never commit compiled output.
+config/*.js
+config/*.d.ts
+config/*.js.map
+
 # Environment / secrets
 .env
 .env.*

@@ -26,6 +26,7 @@ DevOps portfolio reference.
 .
 ├── frontend/   # Angular app
 ├── backend/    # NestJS API
+├── config/     # the single practice config (branding, contact, legal + demo seed)
 ├── docs/       # PRD, ADRs, agent docs
 └── package.json  # npm workspaces root (scripts fan out to both apps)
 ```
@@ -77,8 +78,23 @@ Run against the local stack (Postgres must be up). `DATABASE_URL` comes from `.e
 # from the repo root; commands target the backend workspace
 npm run prisma:migrate --workspace backend          # create & apply a dev migration
 npm run prisma:migrate:deploy --workspace backend    # apply existing migrations (CI/prod)
+npm run db:seed --workspace backend                  # seed the demo practice from config
 npm run prisma:studio --workspace backend            # browse data in Prisma Studio
 ```
+
+## Configuration
+
+A practice is launched by editing **one file**: [`config/practice.config.ts`](config/practice.config.ts)
+(typed by `config/practice-config.types.ts`, with invariants checked by
+`config/practice-config.validation.ts`). It has two parts, per
+[ADR-0001](docs/adr/0001-config-seeds-db-is-source-of-truth.md):
+
+- **Presentation** — `branding`, `contact`, `legal` — drives the public website.
+- **Seed** — `therapists`, `services`, `capabilities`, opening/working hours — the initial
+  operational data loaded into the database by `npm run db:seed`. After seeding, the
+  **database** is the source of truth and this data is edited in the admin, never by
+  changing the file. Entities are referenced by a human-readable `key` that doubles as
+  their database id, so re-seeding is idempotent.
 
 ## Scripts (run from the repo root)
 

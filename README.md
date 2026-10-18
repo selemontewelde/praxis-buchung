@@ -63,6 +63,23 @@ docker compose up        # builds and starts the whole stack
 Ports are configurable via `.env`. Stop with `docker compose down` (add `-v` to
 also drop the Postgres volume).
 
+## Database (Prisma)
+
+The schema lives in `backend/prisma/schema.prisma`; the SQL migrations in
+`backend/prisma/migrations/` are committed. On Prisma 7 the connection URL is read
+from `backend/prisma.config.ts` (migrations) and from a driver adapter at runtime,
+not from the schema. The Prisma client is generated into `backend/src/generated/`
+on every install (`postinstall`) and is gitignored.
+
+Run against the local stack (Postgres must be up). `DATABASE_URL` comes from `.env`:
+
+```bash
+# from the repo root; commands target the backend workspace
+npm run prisma:migrate --workspace backend          # create & apply a dev migration
+npm run prisma:migrate:deploy --workspace backend    # apply existing migrations (CI/prod)
+npm run prisma:studio --workspace backend            # browse data in Prisma Studio
+```
+
 ## Scripts (run from the repo root)
 
 | Command                 | What it does                                   |

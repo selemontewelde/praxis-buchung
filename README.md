@@ -34,6 +34,7 @@ DevOps portfolio reference.
 
 - Node.js 22 (`.nvmrc` pins the version — run `nvm use`)
 - npm 10+
+- Docker + Docker Compose v2 (for the local stack)
 
 ## Getting started
 
@@ -41,6 +42,24 @@ DevOps portfolio reference.
 nvm use          # switch to Node 22
 npm install      # installs both workspaces from the repo root
 ```
+
+## Local stack (Docker Compose)
+
+```bash
+cp .env.example .env     # local dev values (gitignored)
+docker compose up        # builds and starts the whole stack
+```
+
+| Service  | URL / port                      | Notes                          |
+| -------- | ------------------------------- | ------------------------------ |
+| Frontend | http://localhost:4200           | Angular dev server             |
+| Backend  | http://localhost:3000           | NestJS API                     |
+| Health   | http://localhost:3000/health    | 200 + DB connectivity, else 503 |
+| Postgres | localhost:5432                  | user/pass/db from `.env`       |
+| Mailpit  | http://localhost:8025           | mail UI; SMTP on 1025          |
+
+Ports are configurable via `.env`. Stop with `docker compose down` (add `-v` to
+also drop the Postgres volume).
 
 ## Scripts (run from the repo root)
 

@@ -1,0 +1,92 @@
+name: praxis-buchung
+
+# Local development stack. One `docker compose up` starts Postgres, Mailpit, the
+# NestJS backend and the Angular frontend. Values come from .env (copy .env.example).
+# Production Dockerfiles, Caddy and deployment land in milestone 8.
+
+services:
+  postgres:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    ports:
+      - '${POSTGRES_PORT:-5432}:5432'
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      # The backend waits for this to pass before starting (see depends_on below).
+      test: ['CMD-SHELL', 'pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  mailpit:
+    # Catches all outgoing mail locally. Web UI on 8025, SMTP on 1025 (used from M5).
+    image: axllent/mailpit:v1.31
+    restart: unless-stopped
+    ports:
+      - '${MAILPIT_UI_PORT:-8025}:8025'
+      - '${MAILPIT_SMTP_PORT:-1025}:1025'
+
+  backend:
+    build:
+      context: .
+      dockerfile: infra/backend.dev.Dockerfile
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      NODE_ENV: development
+      PORT: 3000
+      # Service name "postgres" resolves on the compose network, not localhost.
+      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+      SMTP_HOST: mailpit
+      SMTP_PORT: 1025
+    ports:
+      - '${BACKEND_PORT:-3000}:3000'
+    volumes:
+      # Bind-mount source for live reload. The anonymous volumes keep container
+      # writes (installed node_modules at the workspace root, and the compiled
+      # dist/) out of the host bind mount, so the root-in-container build output
+      # never lands on the host as root-owned files.
+      - ./backend:/app/backend
+      - /app/node_modules
+      - /app/backend/dist
+    command: npm run start:dev --workspace backend
+    healthcheck:
+      # Node 22 has a global fetch, so no curl/wget is needed in the image.
+      test:
+        - CMD
+        - node
+        - -e
+        - "fetch('http://localhost:3000/health').then(r => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))"
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 40s
+
+  frontend:
+    build:
+      context: .
+      dockerfile: infra/frontend.dev.Dockerfile
+    restart: unless-stopped
+    depends_on:
+      backend:
+        condition: service_healthy
+    environment:
+      NODE_ENV: development
+    ports:
+      - '${FRONTEND_PORT:-4200}:4200'
+    volumes:
+      - ./frontend:/app/frontend
+      - /app/node_modules
+      # Keep Angular's build cache inside the container (same reason as backend).
+      - /app/frontend/.angular
+    command: npm run start --workspace frontend -- --host 0.0.0.0 --poll 1000
+
+volumes:
+  postgres-data:

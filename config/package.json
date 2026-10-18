@@ -1,4 +1,21 @@
 {
+  "name": "@praxis-buchung/config",
+  "version": "0.0.0",
   "private": true,
-  "type": "module"
+  "type": "module",
+  "description": "The single practice configuration (branding, contact, legal) plus the demo seed data, shared by the backend and the seed script.",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "postinstall": "tsc -p tsconfig.json"
+  },
+  "devDependencies": {
+    "typescript": "~6.0.2"
+  }
 }

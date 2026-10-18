@@ -80,6 +80,8 @@ services:
         condition: service_healthy
     environment:
       NODE_ENV: development
+      # The dev-server proxy forwards /api to the backend over the compose network.
+      API_PROXY_TARGET: http://backend:3000
     ports:
       - '${FRONTEND_PORT:-4200}:4200'
     volumes:

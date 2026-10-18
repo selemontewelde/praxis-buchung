@@ -1,1 +1,51 @@
-/* You can add global styles to this file, and also import other style files */
+/* Global base styles and theme tokens.
+ *
+ * The brand colours default to the demo practice here and are overridden at
+ * runtime by PracticeService (from GET /api/public/practice), so the site is
+ * themed from the config without a rebuild. */
+:root {
+  --color-primary: #0f766e;
+  --color-accent: #f59e0b;
+  --color-text: #1f2937;
+  --color-muted: #6b7280;
+  --color-surface: #ffffff;
+  --color-bg: #f8fafc;
+  --color-border: #e5e7eb;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family:
+    system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  color: var(--color-text);
+  background: var(--color-bg);
+  line-height: 1.5;
+}
+
+h1,
+h2,
+h3 {
+  color: var(--color-primary);
+  line-height: 1.2;
+}
+
+a {
+  color: var(--color-primary);
+}
+
+/* A single, consistent keyboard focus indicator across the site. */
+:focus-visible {
+  outline: 3px solid var(--color-accent);
+  outline-offset: 2px;
+}

@@ -8,8 +8,9 @@
     "node": ">=22"
   },
   "workspaces": [
-    "frontend",
-    "backend"
+    "config",
+    "backend",
+    "frontend"
   ],
   "scripts": {
     "lint": "npm run lint --workspaces --if-present",

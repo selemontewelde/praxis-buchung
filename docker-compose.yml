@@ -49,11 +49,25 @@ services:
     ports:
       - '${BACKEND_PORT:-3000}:3000'
     volumes:
-      # Bind-mount source for live reload; the anonymous volume keeps the image's
-      # installed node_modules (which live at the workspace root /app).
+      # Bind-mount source for live reload. The anonymous volumes keep container
+      # writes (installed node_modules at the workspace root, and the compiled
+      # dist/) out of the host bind mount, so the root-in-container build output
+      # never lands on the host as root-owned files.
       - ./backend:/app/backend
       - /app/node_modules
+      - /app/backend/dist
     command: npm run start:dev --workspace backend
+    healthcheck:
+      # Node 22 has a global fetch, so no curl/wget is needed in the image.
+      test:
+        - CMD
+        - node
+        - -e
+        - "fetch('http://localhost:3000/health').then(r => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))"
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 40s
 
   frontend:
     build:
@@ -61,7 +75,8 @@ services:
       dockerfile: infra/frontend.dev.Dockerfile
     restart: unless-stopped
     depends_on:
-      - backend
+      backend:
+        condition: service_healthy
     environment:
       NODE_ENV: development
     ports:
@@ -69,6 +84,8 @@ services:
     volumes:
       - ./frontend:/app/frontend
       - /app/node_modules
+      # Keep Angular's build cache inside the container (same reason as backend).
+      - /app/frontend/.angular
     command: npm run start --workspace frontend -- --host 0.0.0.0 --poll 1000
 
 volumes:

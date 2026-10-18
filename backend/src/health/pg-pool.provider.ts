@@ -9,7 +9,7 @@ import { Pool } from 'pg';
  * the real data-access layer and this pool (and the custom DB indicator) will be
  * replaced by Terminus' `PrismaHealthIndicator`.
  */
-export const PG_POOL = 'PG_POOL';
+export const PG_POOL = Symbol('PG_POOL');
 
 export const pgPoolProvider: Provider = {
   provide: PG_POOL,

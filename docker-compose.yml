@@ -50,12 +50,13 @@ services:
       - '${BACKEND_PORT:-3000}:3000'
     volumes:
       # Bind-mount source for live reload. The anonymous volumes keep container
-      # writes (installed node_modules at the workspace root, and the compiled
-      # dist/) out of the host bind mount, so the root-in-container build output
-      # never lands on the host as root-owned files.
+      # writes (installed node_modules at the workspace root, the compiled dist/,
+      # and Prisma's generated client) out of the host bind mount, so the
+      # root-in-container build output never lands on the host as root-owned files.
       - ./backend:/app/backend
       - /app/node_modules
       - /app/backend/dist
+      - /app/backend/src/generated
     command: npm run start:dev --workspace backend
     healthcheck:
       # Node 22 has a global fetch, so no curl/wget is needed in the image.

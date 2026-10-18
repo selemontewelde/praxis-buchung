@@ -1,0 +1,188 @@
+// Prisma schema for praxis-buchung — the booking domain of a single physiotherapy
+// practice. Vocabulary follows GLOSSARY.md; the config/DB split follows ADR-0001
+// (the database is the source of truth for all operational data).
+//
+// Time model (see ADR-0001 and the "UTC" acceptance criterion of issue #6):
+//   * Concrete instants — Appointment/Block start & end, consent, audit timestamps —
+//     are stored as UTC `DateTime` (Postgres `timestamptz`).
+//   * Recurring weekly windows — Opening hours and Working hours — are NOT instants.
+//     They are wall-clock rules ("Mondays 08:00–12:00"), so we store them as a
+//     weekday plus minutes-from-midnight in the practice's local time. Converting a
+//     recurring rule to UTC would be wrong (DST shifts the wall-clock time).
+
+// In Prisma 7 the datasource no longer carries the connection URL — that moves to
+// prisma.config.ts (used by the CLI for migrations). At runtime the URL is given to
+// a driver adapter passed to PrismaClient (see src/prisma/prisma.service.ts).
+datasource db {
+  provider = "postgresql"
+}
+
+// Prisma 7's generator emits the client as source into the project (not into
+// node_modules), so the output folder is gitignored and excluded from linting.
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+// --- Enums --------------------------------------------------------------------
+
+enum Weekday {
+  MONDAY
+  TUESDAY
+  WEDNESDAY
+  THURSDAY
+  FRIDAY
+  SATURDAY
+  SUNDAY
+}
+
+enum AppointmentStatus {
+  BOOKED
+  CANCELLED
+}
+
+// Why a therapist is unavailable for a Block ("Sperrzeit"), per the glossary.
+enum BlockReason {
+  VACATION
+  TRAINING
+  SICK
+  OTHER
+}
+
+// --- People -------------------------------------------------------------------
+
+/// A member of the practice's team who delivers services. Never hard-deleted:
+/// departures and future-dated hires are modelled with the Active range
+/// (activeFrom / activeUntil), preserving appointment history (ADR-0001).
+model Therapist {
+  id          String    @id @default(cuid())
+  firstName   String
+  lastName    String
+  title       String? // optional professional/academic title, e.g. "PT"
+  activeFrom  DateTime  @db.Timestamptz(3) // start of the Active range (UTC)
+  activeUntil DateTime? @db.Timestamptz(3) // null = open-ended (still active)
+  createdAt   DateTime  @default(now()) @db.Timestamptz(3)
+  updatedAt   DateTime  @updatedAt @db.Timestamptz(3)
+
+  capabilities Capability[]
+  workingHours WorkingHours[]
+  blocks       Block[]
+  appointments Appointment[]
+}
+
+// --- Offering -----------------------------------------------------------------
+
+/// A bookable treatment type with a fixed duration (e.g. "Manuelle Therapie",
+/// 20 min). Not a billing position.
+model Service {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  durationMin Int // fixed duration in minutes
+  createdAt   DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt   DateTime @updatedAt @db.Timestamptz(3)
+
+  capabilities Capability[]
+  appointments Appointment[]
+}
+
+/// The fact that a Therapist may deliver a Service (reflects their training).
+/// Admin-editable mapping — an explicit join model, not an implicit m:n, so it
+/// can carry its own columns later (e.g. who granted it, when).
+model Capability {
+  therapistId String
+  serviceId   String
+  therapist   Therapist @relation(fields: [therapistId], references: [id], onDelete: Cascade)
+  service     Service   @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+  createdAt   DateTime  @default(now()) @db.Timestamptz(3)
+
+  @@id([therapistId, serviceId])
+}
+
+// --- Scheduling ---------------------------------------------------------------
+
+/// The practice's recurring weekly open window per weekday — the outer boundary
+/// for all slots. Wall-clock local time (minutes from midnight), not an instant.
+model OpeningHours {
+  id       String  @id @default(cuid())
+  weekday  Weekday
+  startMin Int // minutes from local midnight, 0–1440
+  endMin   Int
+
+  @@unique([weekday, startMin, endMin])
+}
+
+/// A therapist's recurring weekly availability, always inside the Opening hours.
+/// Wall-clock local time, like OpeningHours.
+model WorkingHours {
+  id          String    @id @default(cuid())
+  therapistId String
+  therapist   Therapist @relation(fields: [therapistId], references: [id], onDelete: Cascade)
+  weekday     Weekday
+  startMin    Int
+  endMin      Int
+
+  @@unique([therapistId, weekday, startMin, endMin])
+}
+
+/// A one-off / date-ranged period a therapist is unavailable ("Sperrzeit").
+/// A concrete instant range, so stored in UTC.
+model Block {
+  id          String      @id @default(cuid())
+  therapistId String
+  therapist   Therapist   @relation(fields: [therapistId], references: [id], onDelete: Cascade)
+  reason      BlockReason
+  startAt     DateTime    @db.Timestamptz(3) // UTC
+  endAt       DateTime    @db.Timestamptz(3) // UTC
+  note        String?
+  createdAt   DateTime    @default(now()) @db.Timestamptz(3)
+
+  @@index([therapistId, startAt])
+}
+
+// --- Booking ------------------------------------------------------------------
+
+/// A booked slot: therapist + service + start time + patient. The durable result
+/// of a booking. Patient data is stored inline and kept minimal (name, email,
+/// phone) — no separate patient record and no health data (MVP scope).
+model Appointment {
+  id           String            @id @default(cuid())
+  therapistId  String
+  therapist    Therapist         @relation(fields: [therapistId], references: [id])
+  serviceId    String
+  service      Service           @relation(fields: [serviceId], references: [id])
+  startAt      DateTime          @db.Timestamptz(3) // UTC
+  endAt        DateTime          @db.Timestamptz(3) // UTC — derived from the service duration at booking time
+  status       AppointmentStatus @default(BOOKED)
+  patientName  String
+  patientEmail String
+  patientPhone String
+  createdAt    DateTime          @default(now()) @db.Timestamptz(3)
+  updatedAt    DateTime          @updatedAt @db.Timestamptz(3)
+  cancelledAt  DateTime?         @db.Timestamptz(3) // set when status becomes CANCELLED
+
+  consent ConsentRecord?
+
+  @@index([therapistId, startAt])
+}
+
+/// Records the patient's data-protection consent for a booking (revDSG): which
+/// version of the privacy text they accepted, and when. One per appointment.
+model ConsentRecord {
+  id            String      @id @default(cuid())
+  appointmentId String      @unique
+  appointment   Appointment @relation(fields: [appointmentId], references: [id], onDelete: Cascade)
+  policyVersion String // the privacy-text version that was accepted
+  acceptedAt    DateTime    @db.Timestamptz(3) // UTC
+}
+
+// --- Admin --------------------------------------------------------------------
+
+/// A practice staff member who can log into the admin area. Passwords are only
+/// ever stored hashed (auth is implemented in milestone 7).
+model AdminUser {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  createdAt    DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt    DateTime @updatedAt @db.Timestamptz(3)
+}

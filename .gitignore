@@ -7,6 +7,9 @@ build/
 .angular/
 *.tsbuildinfo
 
+# Prisma generated client (regenerated on install via `prisma generate`)
+backend/src/generated/
+
 # Environment / secrets
 .env
 .env.*

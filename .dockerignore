@@ -5,6 +5,7 @@
 **/.angular
 **/coverage
 **/*.tsbuildinfo
+backend/src/generated
 .git
 .github
 *.log

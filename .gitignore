@@ -1,0 +1,31 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+build/
+.angular/
+
+# Environment / secrets
+.env
+.env.*
+!.env.example
+*.local
+
+# Test / coverage
+coverage/
+
+# Logs
+*.log
+npm-debug.log*
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# Installed agent skills — reproducible via `npx skills add mattpocock/skills`
+# from the committed skills-lock.json; the payloads themselves are not vendored.
+.claude/skills/
+.agents/

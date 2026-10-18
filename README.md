@@ -1,5 +1,7 @@
 # praxis-buchung
 
+[![CI](https://github.com/selemontewelde/praxis-buchung/actions/workflows/ci.yml/badge.svg)](https://github.com/selemontewelde/praxis-buchung/actions/workflows/ci.yml)
+
 Configurable website with online appointment booking for a single physiotherapy
 practice. A new practice is launched by editing a config file (name, colours, logo,
 contact, legal) — no code changes. Built as a reusable template and as a fullstack +

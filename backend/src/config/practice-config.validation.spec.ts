@@ -1,13 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import type {
-  PracticeConfig,
-  SeedData,
-} from '../../../config/practice-config.types.js';
-import { practiceConfig } from '../../../config/practice.config.js';
 import {
+  type PracticeConfig,
   PracticeConfigError,
+  practiceConfig,
+  type SeedData,
   validatePracticeConfig,
-} from '../../../config/practice-config.validation.js';
+} from '@praxis-buchung/config';
 
 /** A minimal, internally consistent config; tests mutate `seed` per case. */
 function makeConfig(seed: SeedData): PracticeConfig {

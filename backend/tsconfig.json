@@ -13,10 +13,7 @@
     "target": "ES2023",
     "sourceMap": true,
     "outDir": "./dist",
-    // Repo root, so this type-check-only config also covers the seed and the
-    // top-level practice config it imports. The build uses tsconfig.build.json,
-    // which narrows rootDir back to ./src.
-    "rootDir": "..",
+    "rootDir": ".",
     "incremental": true,
     "skipLibCheck": true,
     "strict": true,

@@ -1,6 +1,5 @@
 import { PrismaPg } from '@prisma/adapter-pg';
-import { practiceConfig } from '../../config/practice.config.js';
-import { validatePracticeConfig } from '../../config/practice-config.validation.js';
+import { practiceConfig, validatePracticeConfig } from '@praxis-buchung/config';
 import { PrismaClient } from '../src/generated/prisma/client.js';
 
 /**

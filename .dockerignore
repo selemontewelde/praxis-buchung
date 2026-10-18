@@ -1,0 +1,13 @@
+# Keep the build context small and avoid copying host-built artifacts (wrong
+# platform / huge) into the image. Dependencies are installed inside the image.
+**/node_modules
+**/dist
+**/.angular
+**/coverage
+**/*.tsbuildinfo
+.git
+.github
+*.log
+.env
+.env.*
+!.env.example

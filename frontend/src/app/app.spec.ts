@@ -7,6 +7,13 @@ import { routes } from './app.routes';
 
 describe('App', () => {
   beforeEach(async () => {
+    // Start from the default language regardless of what other specs persisted,
+    // so the shell renders German and this test is order-independent.
+    try {
+      localStorage.clear();
+    } catch {
+      // ignore (non-DOM environment)
+    }
     await TestBed.configureTestingModule({
       imports: [App],
       providers: [

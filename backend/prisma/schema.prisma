@@ -165,6 +165,7 @@ model Appointment {
   updatedAt    DateTime          @updatedAt @db.Timestamptz(3)
   cancelledAt  DateTime?         @db.Timestamptz(3) // set when status becomes CANCELLED
   cancellationToken String?      @unique // single-use token for the self-service cancel link
+  reminderSentAt DateTime?       @db.Timestamptz(3) // set when the 24h reminder was sent
 
   consent ConsentRecord?
 

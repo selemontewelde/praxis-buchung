@@ -20,6 +20,8 @@ export interface CancellationEmailData {
   startAt: Date;
 }
 
+export type ReminderEmailData = CancellationEmailData;
+
 /**
  * Sends patient emails over SMTP (Mailpit locally, real SMTP via env in
  * staging/production). Plain-text German emails — the patient's language isn't
@@ -58,6 +60,20 @@ export class MailService {
       `${this.formatWhen(data.startAt)}\n\n` +
       `Freundliche Grüsse\n${practice}`;
     await this.send(data.to, `Terminabsage – ${practice}`, body);
+  }
+
+  async sendReminder(data: ReminderEmailData): Promise<void> {
+    const practice = practiceConfig.branding.name;
+    // Deliberately no cancellation link: the reminder goes out when the online
+    // cancellation window has closed, so patients are asked to call instead.
+    const body =
+      `Guten Tag ${data.patientName}\n\n` +
+      `Erinnerung an Ihren morgigen Termin:\n` +
+      `${data.serviceName} bei ${data.therapistName}\n` +
+      `${this.formatWhen(data.startAt)}\n\n` +
+      `Für kurzfristige Änderungen rufen Sie uns bitte an: ${practiceConfig.contact.phone}\n\n` +
+      `Freundliche Grüsse\n${practice}`;
+    await this.send(data.to, `Terminerinnerung – ${practice}`, body);
   }
 
   private formatWhen(startAt: Date): string {

@@ -30,6 +30,7 @@ function makeConfig(seed: SeedData): PracticeConfig {
       minLeadMinutes: 120,
       horizonDays: 60,
       cancellationDeadlineHours: 24,
+      reminderHoursBefore: 24,
     },
     seed,
   };

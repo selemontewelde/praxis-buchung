@@ -54,6 +54,8 @@ export class SlotService {
     const service = await this.prisma.service.findUnique({
       where: { id: serviceId },
     });
+    // An unknown service yields no availability (empty), not an error: serviceId
+    // is a free-form identifier and callers treat "no slots" uniformly.
     if (service === null) {
       return [];
     }
@@ -73,16 +75,36 @@ export class SlotService {
     }
 
     const openingHours = await this.prisma.openingHours.findMany();
-    // The UTC range covering [fromDate, toDate] in local time, both bounds built
-    // the same way: local midnight of fromDate and of the day after toDate.
-    const rangeStart = zonedMinutesToUtc(fromDate, 0, timezone);
-    const dayAfterTo = DateTime.fromISO(toDate, { zone: timezone })
+
+    // Clamp the requested range to the bookable window [today, today + horizon] in
+    // the practice timezone. Days outside it produce no slots anyway (the lead-time
+    // and horizon filters drop them), so clamping keeps a huge requested range from
+    // forcing pointless day iteration without changing the result.
+    const nowLocal = DateTime.fromJSDate(now, { zone: timezone });
+    const todayLocal = nowLocal.toISODate();
+    const horizonLocal = nowLocal
+      .plus({ days: booking.horizonDays })
+      .toISODate();
+    if (todayLocal === null || horizonLocal === null) {
+      throw new Error('Could not resolve the local booking window');
+    }
+    const effectiveFrom = fromDate > todayLocal ? fromDate : todayLocal;
+    const effectiveTo = toDate < horizonLocal ? toDate : horizonLocal;
+    const dates =
+      effectiveFrom > effectiveTo
+        ? []
+        : this.enumerateDates(effectiveFrom, effectiveTo, timezone);
+
+    // UTC bounds for the busy-interval queries, aligned to the clamped range:
+    // local midnight of effectiveFrom and of the day after effectiveTo.
+    const rangeStart = zonedMinutesToUtc(effectiveFrom, 0, timezone);
+    const dayAfterTo = DateTime.fromISO(effectiveTo, { zone: timezone })
       .plus({ days: 1 })
       .toISODate();
-    if (dayAfterTo === null) {
-      throw new Error(`Invalid toDate: ${toDate}`);
-    }
-    const rangeEnd = zonedMinutesToUtc(dayAfterTo, 0, timezone);
+    const rangeEnd =
+      dayAfterTo === null
+        ? rangeStart
+        : zonedMinutesToUtc(dayAfterTo, 0, timezone);
 
     const therapistIds = activeTherapists.map((t) => t.id);
     const [appointments, blocks] = await Promise.all([
@@ -102,8 +124,6 @@ export class SlotService {
         },
       }),
     ]);
-
-    const dates = this.enumerateDates(fromDate, toDate, timezone);
 
     return activeTherapists.map((therapist) => {
       const busyForTherapist = [...appointments, ...blocks].filter(

@@ -18,6 +18,22 @@ jobs:
   ci:
     name: Lint, typecheck, test, build
     runs-on: ubuntu-latest
+    # Postgres for the integration tests (the double-booking proof). Unit tests
+    # don't use it; it just has to be healthy before the integration step runs.
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: praxis
+          POSTGRES_PASSWORD: praxis
+          POSTGRES_DB: praxis_buchung
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U praxis -d praxis_buchung"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
     steps:
       # Clone the repository into the runner.
       - name: Check out the repository
@@ -49,3 +65,13 @@ jobs:
 
       - name: Build
         run: npm run build
+
+      # Apply migrations + seed into the service Postgres, then run the
+      # integration tests (e.g. the concurrent double-booking proof).
+      - name: Integration tests (real Postgres)
+        env:
+          DATABASE_URL: postgresql://praxis:praxis@localhost:5432/praxis_buchung
+        run: |
+          npm run prisma:migrate:deploy --workspace backend
+          npm run db:seed --workspace backend
+          npm run test:int --workspace backend

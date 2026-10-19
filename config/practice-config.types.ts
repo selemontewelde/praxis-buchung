@@ -26,7 +26,20 @@ export interface PracticeConfig {
    * (milestone 4) uses it to turn them into UTC instants with correct DST.
    */
   timezone: string;
+  booking: Booking;
   seed: SeedData;
+}
+
+/** Practice-wide booking policy that shapes which slots are offered. */
+export interface Booking {
+  /** Step between candidate slot starts, in minutes (e.g. 15). */
+  gridMin: number;
+  /** Minimum free time required around an appointment, in minutes. */
+  bufferMin: number;
+  /** Earliest a slot may be booked, as minutes from now (lead time). */
+  minLeadMinutes: number;
+  /** How far into the future bookings are offered, in days. */
+  horizonDays: number;
 }
 
 export interface Branding {

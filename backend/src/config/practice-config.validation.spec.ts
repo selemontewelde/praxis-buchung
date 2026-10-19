@@ -24,6 +24,12 @@ function makeConfig(seed: SeedData): PracticeConfig {
     },
     legal: { owner: 'Test GmbH', privacyPolicyVersion: '2025-01' },
     timezone: 'Europe/Zurich',
+    booking: {
+      gridMin: 15,
+      bufferMin: 10,
+      minLeadMinutes: 120,
+      horizonDays: 60,
+    },
     seed,
   };
 }
@@ -68,6 +74,12 @@ describe('validatePracticeConfig', () => {
   it('rejects an invalid timezone', () => {
     const config = { ...makeConfig(validSeed), timezone: 'Mars/Olympus' };
     expect(() => validatePracticeConfig(config)).toThrow(/timezone/);
+  });
+
+  it('rejects a non-positive booking grid', () => {
+    const config = makeConfig(validSeed);
+    config.booking.gridMin = 0;
+    expect(() => validatePracticeConfig(config)).toThrow(/gridMin/);
   });
 
   it('rejects duplicate therapist keys', () => {

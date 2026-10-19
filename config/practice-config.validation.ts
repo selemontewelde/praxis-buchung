@@ -58,6 +58,22 @@ export function validatePracticeConfig(config: PracticeConfig): void {
     problems.push(`invalid timezone "${config.timezone}"`);
   }
 
+  const { gridMin, bufferMin, minLeadMinutes, horizonDays } = config.booking;
+  if (gridMin <= 0) {
+    problems.push(`booking.gridMin must be positive, got ${gridMin}`);
+  }
+  if (bufferMin < 0) {
+    problems.push(`booking.bufferMin must not be negative, got ${bufferMin}`);
+  }
+  if (minLeadMinutes < 0) {
+    problems.push(
+      `booking.minLeadMinutes must not be negative, got ${minLeadMinutes}`,
+    );
+  }
+  if (horizonDays <= 0) {
+    problems.push(`booking.horizonDays must be positive, got ${horizonDays}`);
+  }
+
   const { therapists, services, capabilities, openingHours, workingHours } =
     config.seed;
 

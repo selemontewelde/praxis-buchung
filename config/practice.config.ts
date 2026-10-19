@@ -36,6 +36,13 @@ export const practiceConfig: PracticeConfig = {
 
   timezone: 'Europe/Zurich',
 
+  booking: {
+    gridMin: 15,
+    bufferMin: 10,
+    minLeadMinutes: 120, // no bookings within the next 2 hours
+    horizonDays: 60,
+  },
+
   seed: {
     therapists: [
       {

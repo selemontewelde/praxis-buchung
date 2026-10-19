@@ -1,6 +1,7 @@
 import { ConflictException } from '@nestjs/common';
 import { DateTime } from 'luxon';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { MailService } from '../mail/mail.service.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { SlotService } from '../slots/slot.service.js';
 import { BookingService } from './booking.service.js';
@@ -20,7 +21,11 @@ describe.skipIf(!hasDb)('Booking concurrency (real Postgres)', () => {
 
   beforeAll(async () => {
     prisma = new PrismaService();
-    booking = new BookingService(prisma, new SlotService(prisma));
+    booking = new BookingService(
+      prisma,
+      new SlotService(prisma),
+      new MailService(),
+    );
     await prisma.appointment.deleteMany({ where: { patientEmail: TEST_EMAIL } });
   });
 

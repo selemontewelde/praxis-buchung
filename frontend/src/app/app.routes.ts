@@ -21,6 +21,11 @@ export const routes: Routes = [
       import('./pages/booking-page').then((m) => m.BookingPage),
   },
   {
+    path: 'stornieren',
+    loadComponent: () =>
+      import('./pages/cancellation-page').then((m) => m.CancellationPage),
+  },
+  {
     path: 'kontakt',
     loadComponent: () =>
       import('./pages/contact-page').then((m) => m.ContactPage),

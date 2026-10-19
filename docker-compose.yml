@@ -46,6 +46,9 @@ services:
       DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
       SMTP_HOST: mailpit
       SMTP_PORT: 1025
+      MAIL_FROM: ${MAIL_FROM:-praxis@physio-aarau.example}
+      # Base URL the cancellation link in emails points at (the public site).
+      PUBLIC_BASE_URL: ${PUBLIC_BASE_URL:-http://localhost:4200}
     ports:
       - '${BACKEND_PORT:-3000}:3000'
     volumes:

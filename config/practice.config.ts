@@ -41,6 +41,7 @@ export const practiceConfig: PracticeConfig = {
     bufferMin: 10,
     minLeadMinutes: 120, // no bookings within the next 2 hours
     horizonDays: 60,
+    cancellationDeadlineHours: 24,
   },
 
   seed: {

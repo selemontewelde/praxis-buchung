@@ -63,3 +63,9 @@ _Avoid_: booking (the act), reservation, event
 **Booking**:
 The patient-facing act of creating an Appointment.
 _Avoid_: appointment (the result)
+
+**Cancellation**:
+The patient ending a booked Appointment before its start, via the single-use link
+in the confirmation email, up to the cancellation deadline. Sets the Appointment to
+cancelled (never deleted) and frees the slot. German UI term: "stornieren".
+_Avoid_: delete, remove

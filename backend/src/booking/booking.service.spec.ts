@@ -2,6 +2,7 @@ import { ConflictException, NotFoundException } from '@nestjs/common';
 import { describe, expect, it, vi } from 'vitest';
 import type { PrismaService } from '../prisma/prisma.service.js';
 import type { SlotService } from '../slots/slot.service.js';
+import type { MailService } from '../mail/mail.service.js';
 import { BookingService, type CreateBookingInput } from './booking.service.js';
 
 const SLOT_ISO = '2026-06-15T06:00:00.000Z';
@@ -53,13 +54,17 @@ function makeDeps(opts: {
     ]),
   } as unknown as SlotService;
 
-  return { prisma, slots, appointmentCreate, consentCreate };
+  const mail = {
+    sendBookingConfirmation: vi.fn().mockResolvedValue(undefined),
+  } as unknown as MailService;
+
+  return { prisma, slots, mail, appointmentCreate, consentCreate };
 }
 
 describe('BookingService.create', () => {
   it('creates the appointment and the consent record for an offered slot', async () => {
-    const { prisma, slots, appointmentCreate, consentCreate } = makeDeps({});
-    const result = await new BookingService(prisma, slots).create(input());
+    const { prisma, slots, mail, appointmentCreate, consentCreate } = makeDeps({});
+    const result = await new BookingService(prisma, slots, mail).create(input());
 
     expect(result.id).toBe('appt-1');
     expect(appointmentCreate).toHaveBeenCalledOnce();
@@ -74,26 +79,26 @@ describe('BookingService.create', () => {
   });
 
   it('rejects a start that is not an offered slot', async () => {
-    const { prisma, slots } = makeDeps({ offeredSlots: [] });
-    await expect(new BookingService(prisma, slots).create(input())).rejects.toBeInstanceOf(
+    const { prisma, slots, mail } = makeDeps({ offeredSlots: [] });
+    await expect(new BookingService(prisma, slots, mail).create(input())).rejects.toBeInstanceOf(
       ConflictException,
     );
   });
 
   it('rejects an unknown service', async () => {
-    const { prisma, slots } = makeDeps({ service: null });
-    await expect(new BookingService(prisma, slots).create(input())).rejects.toBeInstanceOf(
+    const { prisma, slots, mail } = makeDeps({ service: null });
+    await expect(new BookingService(prisma, slots, mail).create(input())).rejects.toBeInstanceOf(
       NotFoundException,
     );
   });
 
   it('maps a database overlap violation to a conflict', async () => {
-    const { prisma, slots } = makeDeps({
+    const { prisma, slots, mail } = makeDeps({
       txThrows: new Error(
         'insert violates exclusion constraint "appointment_no_overlap"',
       ),
     });
-    await expect(new BookingService(prisma, slots).create(input())).rejects.toBeInstanceOf(
+    await expect(new BookingService(prisma, slots, mail).create(input())).rejects.toBeInstanceOf(
       ConflictException,
     );
   });

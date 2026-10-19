@@ -60,5 +60,17 @@ export const routes: Routes = [
         (m) => m.AdminTherapistsPage,
       ),
   },
+  {
+    path: 'admin/hours',
+    canActivate: [adminAuthGuard],
+    loadComponent: () =>
+      import('./admin/admin-hours-page').then((m) => m.AdminHoursPage),
+  },
+  {
+    path: 'admin/blocks',
+    canActivate: [adminAuthGuard],
+    loadComponent: () =>
+      import('./admin/admin-blocks-page').then((m) => m.AdminBlocksPage),
+  },
   { path: '**', redirectTo: '' },
 ];

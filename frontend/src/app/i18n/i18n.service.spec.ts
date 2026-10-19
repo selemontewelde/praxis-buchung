@@ -32,6 +32,14 @@ describe('I18nService', () => {
     expect(i18n.t('does.not.exist' as TranslationKey)).toBe('does.not.exist');
   });
 
+  it('picks a bilingual value for the current language, German as fallback', () => {
+    const i18n = TestBed.inject(I18nService);
+    expect(i18n.pick('DE', 'EN')).toBe('DE');
+    i18n.setLanguage('en');
+    expect(i18n.pick('DE', 'EN')).toBe('EN');
+    expect(i18n.pick('DE', null)).toBe('DE');
+  });
+
   it('remembers the chosen language across instances', () => {
     TestBed.inject(I18nService).setLanguage('en');
     TestBed.resetTestingModule();

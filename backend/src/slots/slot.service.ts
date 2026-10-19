@@ -139,18 +139,33 @@ export class SlotService {
           continue;
         }
 
-        // Appointments and blocks fall within opening hours (never overnight),
-        // so each starts and ends on the same local day; match by that day.
-        // Overnight spans are out of scope for this practice.
+        // A busy interval (appointment or block) covers this day if it overlaps
+        // [dayStart, dayEnd). Map it to minutes-of-day, clamping multi-day spans
+        // (e.g. a week's holiday block) to the whole day at the boundaries so
+        // interior days are fully busy.
+        const dayStart = zonedMinutesToUtc(date, 0, timezone);
+        const nextDate = DateTime.fromISO(date, { zone: timezone })
+          .plus({ days: 1 })
+          .toISODate();
+        const dayEnd =
+          nextDate === null
+            ? dayStart
+            : zonedMinutesToUtc(nextDate, 0, timezone);
         const busyIntervals = busyForTherapist
           .filter(
             (b) =>
-              DateTime.fromJSDate(b.startAt, { zone: timezone }).toISODate() ===
-              date,
+              b.startAt.getTime() < dayEnd.getTime() &&
+              b.endAt.getTime() > dayStart.getTime(),
           )
           .map((b) => ({
-            startMin: utcToZonedMinutes(b.startAt, timezone),
-            endMin: utcToZonedMinutes(b.endAt, timezone),
+            startMin:
+              b.startAt.getTime() <= dayStart.getTime()
+                ? 0
+                : utcToZonedMinutes(b.startAt, timezone),
+            endMin:
+              b.endAt.getTime() >= dayEnd.getTime()
+                ? 1440
+                : utcToZonedMinutes(b.endAt, timezone),
           }));
 
         const startMinutes = computeSlots({

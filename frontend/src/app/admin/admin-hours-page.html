@@ -1,0 +1,63 @@
+<h1>{{ i18n.t('adminHours.title') }}</h1>
+
+<section class="hours">
+  <h2>{{ i18n.t('adminHours.opening') }}</h2>
+  @for (w of opening(); track $index) {
+    <div class="window">
+      <select [value]="w.weekday" (change)="setWeekday('opening', $index, $event)">
+        @for (d of weekdays; track d) {
+          <option [value]="d">{{ i18n.t($any('weekday.' + d)) }}</option>
+        }
+      </select>
+      <span>{{ i18n.t('adminHours.from') }}</span>
+      <input type="time" [value]="toTime(w.startMin)" (change)="setTime('opening', $index, 'startMin', $event)" />
+      <span>{{ i18n.t('adminHours.to') }}</span>
+      <input type="time" [value]="toTime(w.endMin)" (change)="setTime('opening', $index, 'endMin', $event)" />
+      <button type="button" (click)="removeWindow('opening', $index)">
+        {{ i18n.t('adminHours.remove') }}
+      </button>
+    </div>
+  }
+  <div class="actions">
+    <button type="button" (click)="addWindow('opening')">{{ i18n.t('adminHours.addWindow') }}</button>
+    <button type="button" class="primary" (click)="saveOpening()">{{ i18n.t('adminHours.save') }}</button>
+    @if (openingStatus(); as status) { <span class="status">{{ status }}</span> }
+  </div>
+</section>
+
+<section class="hours">
+  <h2>{{ i18n.t('adminHours.working') }}</h2>
+  <label>
+    <span>{{ i18n.t('adminHours.selectTherapist') }}</span>
+    <select [value]="selectedTherapist()" (change)="selectTherapist($event)">
+      <option value="">—</option>
+      @for (t of therapists(); track t.id) {
+        <option [value]="t.id">{{ t.name }}</option>
+      }
+    </select>
+  </label>
+
+  @if (selectedTherapist() !== '') {
+    @for (w of working(); track $index) {
+      <div class="window">
+        <select [value]="w.weekday" (change)="setWeekday('working', $index, $event)">
+          @for (d of weekdays; track d) {
+            <option [value]="d">{{ i18n.t($any('weekday.' + d)) }}</option>
+          }
+        </select>
+        <span>{{ i18n.t('adminHours.from') }}</span>
+        <input type="time" [value]="toTime(w.startMin)" (change)="setTime('working', $index, 'startMin', $event)" />
+        <span>{{ i18n.t('adminHours.to') }}</span>
+        <input type="time" [value]="toTime(w.endMin)" (change)="setTime('working', $index, 'endMin', $event)" />
+        <button type="button" (click)="removeWindow('working', $index)">
+          {{ i18n.t('adminHours.remove') }}
+        </button>
+      </div>
+    }
+    <div class="actions">
+      <button type="button" (click)="addWindow('working')">{{ i18n.t('adminHours.addWindow') }}</button>
+      <button type="button" class="primary" (click)="saveWorking()">{{ i18n.t('adminHours.save') }}</button>
+      @if (workingStatus(); as status) { <span class="status">{{ status }}</span> }
+    </div>
+  }
+</section>

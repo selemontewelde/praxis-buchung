@@ -12,6 +12,8 @@ import { AdminAuthService } from './admin-auth.service';
     <p>{{ i18n.t('admin.loggedInAs') }} {{ auth.admin()?.email }}</p>
     <nav class="admin-nav">
       <a routerLink="/admin/therapists">{{ i18n.t('adminTherapists.nav') }}</a>
+      <a routerLink="/admin/hours">{{ i18n.t('adminHours.nav') }}</a>
+      <a routerLink="/admin/blocks">{{ i18n.t('adminBlocks.nav') }}</a>
     </nav>
     <button type="button" (click)="logout()">{{ i18n.t('admin.logout') }}</button>
   `,

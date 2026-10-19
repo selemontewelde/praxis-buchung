@@ -17,6 +17,7 @@ function everyWeekday(startMin: number, endMin: number) {
 
 function makePrisma(over: {
   appointments?: unknown[];
+  blocks?: unknown[];
 }): PrismaService {
   const anna = {
     id: 'anna',
@@ -39,7 +40,7 @@ function makePrisma(over: {
     therapist: { findMany: vi.fn().mockResolvedValue([anna, gone]) },
     openingHours: { findMany: vi.fn().mockResolvedValue(everyWeekday(480, 720)) },
     appointment: { findMany: vi.fn().mockResolvedValue(over.appointments ?? []) },
-    block: { findMany: vi.fn().mockResolvedValue([]) },
+    block: { findMany: vi.fn().mockResolvedValue(over.blocks ?? []) },
   } as unknown as PrismaService;
 }
 
@@ -130,6 +131,30 @@ describe('SlotService.getAvailableSlots', () => {
       toDate: '2020-01-10',
       now: NOW,
     });
+    expect(result[0].slots).toEqual([]);
+  });
+
+  it('removes all slots on a day fully covered by a multi-day block', async () => {
+    // A block from the day before to the day after covers MONDAY entirely.
+    const service = new SlotService(
+      makePrisma({
+        blocks: [
+          {
+            therapistId: 'anna',
+            startAt: new Date('2026-06-14T00:00:00.000Z'),
+            endAt: new Date('2026-06-16T00:00:00.000Z'),
+          },
+        ],
+      }),
+    );
+
+    const result = await service.getAvailableSlots({
+      serviceId: 'physio',
+      fromDate: MONDAY,
+      toDate: MONDAY,
+      now: NOW,
+    });
+
     expect(result[0].slots).toEqual([]);
   });
 

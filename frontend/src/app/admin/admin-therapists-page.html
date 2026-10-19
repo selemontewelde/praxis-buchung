@@ -1,0 +1,74 @@
+<h1>{{ i18n.t('adminTherapists.title') }}</h1>
+
+<section class="create">
+  <h2>{{ i18n.t('adminTherapists.create') }}</h2>
+  <form (submit)="$event.preventDefault(); create()">
+    <label>
+      <span>{{ i18n.t('adminTherapists.firstName') }}</span>
+      <input [value]="firstName()" (input)="set(firstName, $event)" />
+    </label>
+    <label>
+      <span>{{ i18n.t('adminTherapists.lastName') }}</span>
+      <input [value]="lastName()" (input)="set(lastName, $event)" />
+    </label>
+    <label>
+      <span>{{ i18n.t('adminTherapists.titleLabel') }}</span>
+      <input [value]="titleField()" (input)="set(titleField, $event)" />
+    </label>
+    <label>
+      <span>{{ i18n.t('adminTherapists.roleDe') }}</span>
+      <input [value]="roleDe()" (input)="set(roleDe, $event)" />
+    </label>
+    <label>
+      <span>{{ i18n.t('adminTherapists.roleEn') }}</span>
+      <input [value]="roleEn()" (input)="set(roleEn, $event)" />
+    </label>
+    <label>
+      <span>{{ i18n.t('adminTherapists.photoUrl') }}</span>
+      <input [value]="photoUrl()" (input)="set(photoUrl, $event)" />
+    </label>
+    <label>
+      <span>{{ i18n.t('adminTherapists.activeFrom') }}</span>
+      <input type="date" [value]="activeFrom()" (input)="set(activeFrom, $event)" />
+    </label>
+    <label>
+      <span>{{ i18n.t('adminTherapists.activeUntil') }}</span>
+      <input type="date" [value]="activeUntil()" (input)="set(activeUntil, $event)" />
+    </label>
+    <button type="submit">{{ i18n.t('adminTherapists.save') }}</button>
+  </form>
+</section>
+
+<ul class="therapist-list">
+  @for (t of therapists(); track t.id) {
+    <li class="therapist">
+      <div class="head">
+        <strong>{{ t.firstName }} {{ t.lastName }}</strong>
+        @if (isActive(t)) {
+          <span class="badge active">{{ i18n.t('adminTherapists.active') }}</span>
+          <button type="button" (click)="deactivate(t)">
+            {{ i18n.t('adminTherapists.deactivate') }}
+          </button>
+        } @else {
+          <span class="badge inactive">{{ i18n.t('adminTherapists.inactive') }}</span>
+          <button type="button" (click)="reactivate(t)">
+            {{ i18n.t('adminTherapists.reactivate') }}
+          </button>
+        }
+      </div>
+      <fieldset class="caps">
+        <legend>{{ i18n.t('adminTherapists.capabilities') }}</legend>
+        @for (s of content.services(); track s.id) {
+          <label>
+            <input
+              type="checkbox"
+              [checked]="hasCapability(t, s.id)"
+              (change)="toggleCapability(t, s.id, $any($event.target).checked)"
+            />
+            {{ s.name }}
+          </label>
+        }
+      </fieldset>
+    </li>
+  }
+</ul>

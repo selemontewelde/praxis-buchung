@@ -52,5 +52,13 @@ export const routes: Routes = [
     loadComponent: () =>
       import('./admin/admin-dashboard-page').then((m) => m.AdminDashboardPage),
   },
+  {
+    path: 'admin/therapists',
+    canActivate: [adminAuthGuard],
+    loadComponent: () =>
+      import('./admin/admin-therapists-page').then(
+        (m) => m.AdminTherapistsPage,
+      ),
+  },
   { path: '**', redirectTo: '' },
 ];

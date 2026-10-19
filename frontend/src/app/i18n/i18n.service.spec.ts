@@ -12,6 +12,15 @@ describe('I18nService', () => {
     TestBed.configureTestingModule({});
   });
 
+  // Don't leak a persisted language choice into other spec files (shared storage).
+  afterEach(() => {
+    try {
+      localStorage.clear();
+    } catch {
+      // ignore
+    }
+  });
+
   it('defaults to German', () => {
     const i18n = TestBed.inject(I18nService);
     expect(i18n.language()).toBe('de');

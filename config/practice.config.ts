@@ -105,6 +105,12 @@ export const practiceConfig: PracticeConfig = {
       },
     ],
 
+    // Local dev credentials only — change before any real deployment.
+    admin: {
+      email: 'admin@physio-aarau.example',
+      password: 'changeme-dev-only',
+    },
+
     capabilities: [
       { therapist: 'anna', service: 'physiotherapy' },
       { therapist: 'anna', service: 'manual-therapy' },

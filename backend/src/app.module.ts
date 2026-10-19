@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { ScheduleModule } from '@nestjs/schedule';
 import { AppController } from './app.controller.js';
 import { AppService } from './app.service.js';
+import { AuthModule } from './auth/auth.module.js';
 import { BookingModule } from './booking/booking.module.js';
 import { HealthModule } from './health/health.module.js';
 import { MailModule } from './mail/mail.module.js';
@@ -20,6 +21,7 @@ import { SlotsModule } from './slots/slots.module.js';
     SlotsModule,
     BookingModule,
     ReminderModule,
+    AuthModule,
   ],
   controllers: [AppController],
   providers: [AppService],

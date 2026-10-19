@@ -93,6 +93,16 @@ const de = {
     'Eine Online-Stornierung ist nicht mehr möglich. Bitte rufen Sie uns an:',
   'cancel.notFound': 'Dieser Stornierungslink ist ungültig oder abgelaufen.',
   'cancel.failed': 'Stornierung fehlgeschlagen. Bitte versuchen Sie es erneut.',
+
+  'admin.title': 'Admin',
+  'admin.loginTitle': 'Admin-Anmeldung',
+  'admin.emailLabel': 'E-Mail',
+  'admin.passwordLabel': 'Passwort',
+  'admin.loginButton': 'Anmelden',
+  'admin.loggingIn': 'Anmelden…',
+  'admin.loginFailed': 'Anmeldung fehlgeschlagen. E-Mail oder Passwort falsch.',
+  'admin.loggedInAs': 'Angemeldet als',
+  'admin.logout': 'Abmelden',
 } as const;
 
 export type TranslationKey = keyof typeof de;
@@ -183,6 +193,16 @@ const en: Record<TranslationKey, string> = {
     'Online cancellation is no longer possible. Please call us:',
   'cancel.notFound': 'This cancellation link is invalid or has expired.',
   'cancel.failed': 'Cancellation failed. Please try again.',
+
+  'admin.title': 'Admin',
+  'admin.loginTitle': 'Admin login',
+  'admin.emailLabel': 'Email',
+  'admin.passwordLabel': 'Password',
+  'admin.loginButton': 'Log in',
+  'admin.loggingIn': 'Logging in…',
+  'admin.loginFailed': 'Login failed. Wrong email or password.',
+  'admin.loggedInAs': 'Logged in as',
+  'admin.logout': 'Log out',
 };
 
 export const translations: Record<Language, Record<TranslationKey, string>> = {

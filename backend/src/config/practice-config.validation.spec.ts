@@ -58,6 +58,7 @@ const validSeed: SeedData = {
     },
   ],
   capabilities: [{ therapist: 'anna', service: 'physio' }],
+  admin: { email: 'admin@example.com', password: 'dev-only' },
   openingHours: [{ weekday: 'MONDAY', startMin: 480, endMin: 720 }],
   workingHours: [
     { therapist: 'anna', weekday: 'MONDAY', startMin: 480, endMin: 720 },

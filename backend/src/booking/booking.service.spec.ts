@@ -19,7 +19,7 @@ function input(over: Partial<CreateBookingInput> = {}): CreateBookingInput {
 }
 
 function makeDeps(opts: {
-  service?: { durationMin: number } | null;
+  service?: { durationMin: number; active?: boolean } | null;
   offeredSlots?: string[];
   txThrows?: unknown;
 }) {
@@ -34,7 +34,9 @@ function makeDeps(opts: {
       findUnique: vi
         .fn()
         .mockResolvedValue(
-          opts.service === undefined ? { durationMin: 30 } : opts.service,
+          opts.service === undefined
+            ? { durationMin: 30, active: true }
+            : opts.service,
         ),
     },
     $transaction: vi.fn().mockImplementation(async (cb: (tx: unknown) => unknown) => {
@@ -90,6 +92,15 @@ describe('BookingService.create', () => {
     await expect(new BookingService(prisma, slots, mail).create(input())).rejects.toBeInstanceOf(
       NotFoundException,
     );
+  });
+
+  it('rejects an archived (inactive) service', async () => {
+    const { prisma, slots, mail } = makeDeps({
+      service: { durationMin: 30, active: false },
+    });
+    await expect(
+      new BookingService(prisma, slots, mail).create(input()),
+    ).rejects.toBeInstanceOf(NotFoundException);
   });
 
   it('maps a database overlap violation to a conflict', async () => {

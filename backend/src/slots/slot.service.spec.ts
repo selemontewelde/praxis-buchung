@@ -36,7 +36,11 @@ function makePrisma(over: {
     workingHours: everyWeekday(480, 600),
   };
   return {
-    service: { findUnique: vi.fn().mockResolvedValue({ id: 'physio', durationMin: 30 }) },
+    service: {
+      findUnique: vi
+        .fn()
+        .mockResolvedValue({ id: 'physio', durationMin: 30, active: true }),
+    },
     therapist: { findMany: vi.fn().mockResolvedValue([anna, gone]) },
     openingHours: { findMany: vi.fn().mockResolvedValue(everyWeekday(480, 720)) },
     appointment: { findMany: vi.fn().mockResolvedValue(over.appointments ?? []) },
@@ -156,6 +160,25 @@ describe('SlotService.getAvailableSlots', () => {
     });
 
     expect(result[0].slots).toEqual([]);
+  });
+
+  it('returns nothing for an archived (inactive) service', async () => {
+    const prisma = {
+      service: {
+        findUnique: vi
+          .fn()
+          .mockResolvedValue({ id: 'physio', durationMin: 30, active: false }),
+      },
+    } as unknown as PrismaService;
+
+    const result = await new SlotService(prisma).getAvailableSlots({
+      serviceId: 'physio',
+      fromDate: MONDAY,
+      toDate: MONDAY,
+      now: NOW,
+    });
+
+    expect(result).toEqual([]);
   });
 
   it('returns nothing for an unknown service', async () => {

@@ -21,6 +21,7 @@ export interface PublicPractice {
     owner: string;
     privacyPolicyVersion: string;
   };
+  timezone: string;
 }
 
 /**
@@ -40,6 +41,12 @@ export class PracticeService {
   readonly branding = computed(() => this._practice()?.branding ?? null);
   readonly contact = computed(() => this._practice()?.contact ?? null);
   readonly legal = computed(() => this._practice()?.legal ?? null);
+  /** Practice timezone; falls back to the browser's zone until loaded. */
+  readonly timezone = computed(
+    () =>
+      this._practice()?.timezone ??
+      Intl.DateTimeFormat().resolvedOptions().timeZone,
+  );
 
   async load(): Promise<void> {
     try {

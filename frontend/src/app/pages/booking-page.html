@@ -1,0 +1,117 @@
+<h1>{{ i18n.t('nav.book') }}</h1>
+
+@if (confirmation(); as c) {
+  <section class="confirmed" role="status" aria-live="polite">
+    <h2>{{ i18n.t('booking.confirmedTitle') }}</h2>
+    <p>{{ i18n.t('booking.confirmedLead') }}</p>
+    <p class="appt">{{ formatDateTime(c.startAt) }}</p>
+    <button type="button" (click)="bookAnother()">
+      {{ i18n.t('booking.bookAnother') }}
+    </button>
+  </section>
+} @else {
+  <div class="booking">
+    <div class="filters">
+      <label>
+        <span>{{ i18n.t('booking.serviceLabel') }}</span>
+        <select [value]="serviceId()" (change)="set(serviceId, $event)">
+          <option value="" disabled>—</option>
+          @for (s of content.services(); track s.id) {
+            <option [value]="s.id">{{ s.name }}</option>
+          }
+        </select>
+      </label>
+
+      <label>
+        <span>{{ i18n.t('booking.therapistLabel') }}</span>
+        <select [value]="therapistId()" (change)="set(therapistId, $event)">
+          <option value="">{{ i18n.t('booking.anyTherapist') }}</option>
+          @for (m of content.team(); track m.id) {
+            <option [value]="m.id">{{ m.firstName }} {{ m.lastName }}</option>
+          }
+        </select>
+      </label>
+
+      <label>
+        <span>{{ i18n.t('booking.dateLabel') }}</span>
+        <input type="date" [value]="date()" (change)="set(date, $event)" />
+      </label>
+
+      <button
+        type="button"
+        class="load"
+        [disabled]="serviceId() === '' || loadingSlots()"
+        (click)="loadSlots()"
+      >
+        {{ i18n.t('booking.showSlots') }}
+      </button>
+    </div>
+
+    @if (error(); as message) {
+      <p class="error" role="alert">{{ message }}</p>
+    }
+
+    @if (!loadingSlots() && slotOptions().length === 0 && error() === null) {
+      <p class="hint">{{ i18n.t('booking.noSlots') }}</p>
+    }
+
+    @if (slotOptions().length > 0) {
+      <fieldset class="slots">
+        <legend>{{ i18n.t('booking.chooseTime') }}</legend>
+        @for (slot of slotOptions(); track slot.startAt + slot.therapistId) {
+          <button
+            type="button"
+            class="slot"
+            [class.selected]="selected()?.startAt === slot.startAt && selected()?.therapistId === slot.therapistId"
+            [attr.aria-pressed]="selected()?.startAt === slot.startAt && selected()?.therapistId === slot.therapistId"
+            (click)="selected.set(slot)"
+          >
+            {{ slot.label }} · {{ slot.therapistName }}
+          </button>
+        }
+      </fieldset>
+    }
+
+    @if (selected(); as slot) {
+      <form class="patient" (submit)="$event.preventDefault(); submit()">
+        <label>
+          <span>{{ i18n.t('booking.nameLabel') }}</span>
+          <input [value]="name()" (input)="set(name, $event)" autocomplete="name" />
+        </label>
+        <label>
+          <span>{{ i18n.t('booking.emailLabel') }}</span>
+          <input
+            type="email"
+            [value]="email()"
+            (input)="set(email, $event)"
+            autocomplete="email"
+          />
+        </label>
+        <label>
+          <span>{{ i18n.t('booking.phoneLabel') }}</span>
+          <input
+            type="tel"
+            [value]="phone()"
+            (input)="set(phone, $event)"
+            autocomplete="tel"
+          />
+        </label>
+        <label class="consent">
+          <input
+            type="checkbox"
+            [checked]="consent()"
+            (change)="consent.set($any($event.target).checked)"
+          />
+          <span>
+            {{ i18n.t('booking.consentLabel') }}
+            (<a routerLink="/datenschutz">{{ i18n.t('nav.privacy') }}</a>)
+          </span>
+        </label>
+
+        <button type="submit" class="submit" [disabled]="!canSubmit()">
+          {{ submitting() ? i18n.t('booking.submitting') : i18n.t('booking.submit') }}
+        </button>
+      </form>
+    }
+  </div>
+}

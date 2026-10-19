@@ -20,6 +20,7 @@ const samplePractice: PublicPractice = {
     email: 'test@example.com',
   },
   legal: { owner: 'Test GmbH', privacyPolicyVersion: '2025-01' },
+  timezone: 'Europe/Zurich',
 };
 
 describe('PracticeService', () => {

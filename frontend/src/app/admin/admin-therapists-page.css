@@ -71,3 +71,34 @@ button {
   align-items: center;
   gap: 0.35rem;
 }
+
+.open-appointments {
+  margin-top: 0.75rem;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid #f59e0b;
+  border-radius: 8px;
+  background: rgba(245, 158, 11, 0.08);
+}
+.open-appointments ul {
+  list-style: none;
+  padding: 0;
+  margin: 0.5rem 0 0;
+  display: grid;
+  gap: 0.35rem;
+}
+.open-appointments li {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.open-appointments button {
+  margin-left: auto;
+  background: transparent;
+  color: #b91c1c;
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  padding: 0.25rem 0.7rem;
+  font: inherit;
+  cursor: pointer;
+}

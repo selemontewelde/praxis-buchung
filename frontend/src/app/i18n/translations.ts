@@ -161,6 +161,16 @@ const de = {
   'adminServices.saved': 'Gespeichert.',
   'adminServices.error': 'Speichern fehlgeschlagen.',
 
+  'adminAppointments.nav': 'Termine',
+  'adminAppointments.title': 'Termine',
+  'adminAppointments.upcoming': 'Kommend',
+  'adminAppointments.past': 'Vergangen',
+  'adminAppointments.cancel': 'Stornieren',
+  'adminAppointments.none': 'Keine Termine.',
+  'adminAppointments.openForTherapist': 'Offene zukünftige Termine dieser Therapeut:in:',
+  'appointmentStatus.BOOKED': 'Gebucht',
+  'appointmentStatus.CANCELLED': 'Storniert',
+
   'weekday.MONDAY': 'Montag',
   'weekday.TUESDAY': 'Dienstag',
   'weekday.WEDNESDAY': 'Mittwoch',
@@ -330,6 +340,16 @@ const en: Record<TranslationKey, string> = {
   'adminServices.none': 'No services.',
   'adminServices.saved': 'Saved.',
   'adminServices.error': 'Save failed.',
+
+  'adminAppointments.nav': 'Appointments',
+  'adminAppointments.title': 'Appointments',
+  'adminAppointments.upcoming': 'Upcoming',
+  'adminAppointments.past': 'Past',
+  'adminAppointments.cancel': 'Cancel',
+  'adminAppointments.none': 'No appointments.',
+  'adminAppointments.openForTherapist': "This therapist's open upcoming appointments:",
+  'appointmentStatus.BOOKED': 'Booked',
+  'appointmentStatus.CANCELLED': 'Cancelled',
 
   'weekday.MONDAY': 'Monday',
   'weekday.TUESDAY': 'Tuesday',

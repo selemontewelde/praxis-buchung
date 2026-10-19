@@ -2,9 +2,14 @@ import { Component, inject, signal } from '@angular/core';
 import { PublicContentService } from '../core/content.service';
 import { I18nService } from '../i18n/i18n.service';
 import {
+  type AdminAppointment,
+  AdminAppointmentApiService,
+} from './admin-appointment-api.service';
+import {
   type AdminTherapist,
   AdminTherapistApiService,
 } from './admin-therapist-api.service';
+import { formatInstant } from './format-instant';
 
 @Component({
   selector: 'app-admin-therapists-page',
@@ -15,8 +20,11 @@ export class AdminTherapistsPage {
   protected readonly i18n = inject(I18nService);
   protected readonly content = inject(PublicContentService);
   private readonly api = inject(AdminTherapistApiService);
+  private readonly appointmentApi = inject(AdminAppointmentApiService);
 
   protected readonly therapists = signal<AdminTherapist[]>([]);
+  /** Open future appointments surfaced after a therapist is deactivated, by therapist id. */
+  protected readonly openAppointments = signal<Record<string, AdminAppointment[]>>({});
 
   protected readonly firstName = signal('');
   protected readonly lastName = signal('');
@@ -49,7 +57,16 @@ export class AdminTherapistsPage {
   }
 
   private async reload(): Promise<void> {
-    this.therapists.set(await this.api.list());
+    const list = await this.api.list();
+    this.therapists.set(list);
+    // Re-surface open future appointments for therapists that are already
+    // inactive, so the state survives a page reload (not only the deactivate
+    // click). Active therapists need no surfacing.
+    await Promise.all(
+      list
+        .filter((t) => !this.isActive(t))
+        .map((t) => this.loadOpenAppointments(t.id)),
+    );
   }
 
   protected async create(): Promise<void> {
@@ -79,10 +96,37 @@ export class AdminTherapistsPage {
   protected async deactivate(t: AdminTherapist): Promise<void> {
     await this.api.update(t.id, { activeUntil: new Date().toISOString() });
     await this.reload();
+    // Surface the therapist's open future appointments so reception can cancel them.
+    await this.loadOpenAppointments(t.id);
+  }
+
+  private async loadOpenAppointments(therapistId: string): Promise<void> {
+    const open = (await this.appointmentApi.list('upcoming', therapistId)).filter(
+      (a) => a.status === 'BOOKED',
+    );
+    this.openAppointments.update((map) => ({ ...map, [therapistId]: open }));
+  }
+
+  protected async cancelAppointment(
+    therapistId: string,
+    appointmentId: string,
+  ): Promise<void> {
+    await this.appointmentApi.cancel(appointmentId);
+    await this.loadOpenAppointments(therapistId);
+  }
+
+  protected formatInstant(iso: string): string {
+    return formatInstant(iso, this.i18n.language());
   }
 
   protected async reactivate(t: AdminTherapist): Promise<void> {
     await this.api.update(t.id, { activeUntil: null });
+    // Clear the (now irrelevant) open-appointments panel for this therapist.
+    this.openAppointments.update((map) => {
+      const next = { ...map };
+      delete next[t.id];
+      return next;
+    });
     await this.reload();
   }
 

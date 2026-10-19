@@ -78,5 +78,13 @@ export const routes: Routes = [
     loadComponent: () =>
       import('./admin/admin-services-page').then((m) => m.AdminServicesPage),
   },
+  {
+    path: 'admin/appointments',
+    canActivate: [adminAuthGuard],
+    loadComponent: () =>
+      import('./admin/admin-appointments-page').then(
+        (m) => m.AdminAppointmentsPage,
+      ),
+  },
   { path: '**', redirectTo: '' },
 ];

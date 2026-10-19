@@ -1,5 +1,7 @@
 import { Module } from '@nestjs/common';
 import { AuthModule } from '../auth/auth.module.js';
+import { AdminAppointmentController } from './admin-appointment.controller.js';
+import { AdminAppointmentService } from './admin-appointment.service.js';
 import { AdminBlockController } from './admin-block.controller.js';
 import { AdminBlockService } from './admin-block.service.js';
 import { AdminHoursController } from './admin-hours.controller.js';
@@ -17,12 +19,14 @@ import { AdminTherapistService } from './admin-therapist.service.js';
     AdminHoursController,
     AdminBlockController,
     AdminServiceController,
+    AdminAppointmentController,
   ],
   providers: [
     AdminTherapistService,
     AdminHoursService,
     AdminBlockService,
     AdminServiceService,
+    AdminAppointmentService,
   ],
 })
 export class AdminModule {}

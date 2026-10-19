@@ -1,4 +1,5 @@
 import { Routes } from '@angular/router';
+import { adminAuthGuard } from './admin/admin-auth.guard';
 
 // German URL slugs for the public pages; each page is lazily loaded.
 export const routes: Routes = [
@@ -39,6 +40,17 @@ export const routes: Routes = [
     path: 'datenschutz',
     loadComponent: () =>
       import('./pages/privacy-page').then((m) => m.PrivacyPage),
+  },
+  {
+    path: 'admin/login',
+    loadComponent: () =>
+      import('./admin/admin-login-page').then((m) => m.AdminLoginPage),
+  },
+  {
+    path: 'admin',
+    canActivate: [adminAuthGuard],
+    loadComponent: () =>
+      import('./admin/admin-dashboard-page').then((m) => m.AdminDashboardPage),
   },
   { path: '**', redirectTo: '' },
 ];

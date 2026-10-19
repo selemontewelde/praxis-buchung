@@ -134,10 +134,17 @@ export interface SeedWorkingHours extends TimeWindow {
   therapist: string;
 }
 
+/** The initial admin login. The password is a local dev credential only. */
+export interface SeedAdmin {
+  email: string;
+  password: string;
+}
+
 export interface SeedData {
   therapists: SeedTherapist[];
   services: SeedService[];
   capabilities: SeedCapability[];
+  admin: SeedAdmin;
   /** The practice's weekly opening windows (outer boundary for all slots). */
   openingHours: TimeWindow[];
   /** Each therapist's weekly working windows, inside the opening hours. */

@@ -1,3 +1,4 @@
+import { hash } from '@node-rs/argon2';
 import { PrismaPg } from '@prisma/adapter-pg';
 import { practiceConfig, validatePracticeConfig } from '@praxis-buchung/config';
 import { PrismaClient } from '../src/generated/prisma/client.js';
@@ -62,6 +63,13 @@ async function main(): Promise<void> {
           update: data,
         });
       }
+
+      const passwordHash = await hash(seed.admin.password);
+      await tx.adminUser.upsert({
+        where: { email: seed.admin.email },
+        create: { email: seed.admin.email, passwordHash },
+        update: { passwordHash },
+      });
 
       for (const capability of seed.capabilities) {
         await tx.capability.upsert({

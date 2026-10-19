@@ -13,6 +13,7 @@ export interface PublicService {
 
 /** An active team member as shown on the public team page. */
 export interface PublicTeamMember {
+  id: string;
   firstName: string;
   lastName: string;
   title: string | null;
@@ -56,6 +57,7 @@ export class PublicContentController {
     return therapists
       .filter((therapist) => isActive(therapist, now))
       .map((therapist) => ({
+        id: therapist.id,
         firstName: therapist.firstName,
         lastName: therapist.lastName,
         title: therapist.title,

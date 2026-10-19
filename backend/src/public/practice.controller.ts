@@ -16,6 +16,8 @@ export interface PublicPractice {
   branding: Branding;
   contact: Contact;
   legal: Legal;
+  /** IANA timezone the practice runs in; the UI formats slot times in it. */
+  timezone: string;
 }
 
 /**
@@ -27,7 +29,7 @@ export interface PublicPractice {
 export class PublicPracticeController {
   @Get('practice')
   getPractice(): PublicPractice {
-    const { branding, contact, legal } = practiceConfig;
-    return { branding, contact, legal };
+    const { branding, contact, legal, timezone } = practiceConfig;
+    return { branding, contact, legal, timezone };
   }
 }

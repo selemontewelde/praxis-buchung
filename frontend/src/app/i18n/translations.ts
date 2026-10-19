@@ -62,6 +62,26 @@ const de = {
   'privacy.rights':
     'Sie haben das Recht auf Auskunft, Berichtigung und Löschung Ihrer Personendaten. Wenden Sie sich dazu an die unten genannte Kontaktadresse.',
   'privacy.contactHeading': 'Kontakt für Datenschutzanfragen',
+
+  'booking.serviceLabel': 'Leistung',
+  'booking.therapistLabel': 'Therapeut:in',
+  'booking.anyTherapist': 'Egal',
+  'booking.dateLabel': 'Datum',
+  'booking.showSlots': 'Freie Zeiten anzeigen',
+  'booking.noSlots': 'An diesem Tag sind keine Zeiten frei.',
+  'booking.chooseTime': 'Zeit wählen',
+  'booking.nameLabel': 'Name',
+  'booking.emailLabel': 'E-Mail',
+  'booking.phoneLabel': 'Telefon',
+  'booking.consentLabel': 'Ich stimme der Datenschutzerklärung zu.',
+  'booking.submit': 'Verbindlich buchen',
+  'booking.submitting': 'Wird gebucht…',
+  'booking.confirmedTitle': 'Termin bestätigt',
+  'booking.confirmedLead': 'Vielen Dank. Ihr Termin:',
+  'booking.bookAnother': 'Weiteren Termin buchen',
+  'booking.failed': 'Buchung fehlgeschlagen. Bitte versuchen Sie es erneut.',
+  'booking.slotUnavailable':
+    'Dieser Termin ist nicht mehr verfügbar. Bitte wählen Sie eine andere Zeit.',
 } as const;
 
 export type TranslationKey = keyof typeof de;
@@ -120,6 +140,26 @@ const en: Record<TranslationKey, string> = {
   'privacy.rights':
     'You have the right to access, correct and delete your personal data. To exercise these rights, contact the address below.',
   'privacy.contactHeading': 'Contact for data protection requests',
+
+  'booking.serviceLabel': 'Service',
+  'booking.therapistLabel': 'Therapist',
+  'booking.anyTherapist': 'Any',
+  'booking.dateLabel': 'Date',
+  'booking.showSlots': 'Show available times',
+  'booking.noSlots': 'No times available on this day.',
+  'booking.chooseTime': 'Choose a time',
+  'booking.nameLabel': 'Name',
+  'booking.emailLabel': 'Email',
+  'booking.phoneLabel': 'Phone',
+  'booking.consentLabel': 'I agree to the privacy policy.',
+  'booking.submit': 'Book',
+  'booking.submitting': 'Booking…',
+  'booking.confirmedTitle': 'Appointment confirmed',
+  'booking.confirmedLead': 'Thank you. Your appointment:',
+  'booking.bookAnother': 'Book another appointment',
+  'booking.failed': 'Booking failed. Please try again.',
+  'booking.slotUnavailable':
+    'This slot is no longer available. Please choose another time.',
 };
 
 export const translations: Record<Language, Record<TranslationKey, string>> = {

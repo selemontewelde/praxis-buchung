@@ -39,6 +39,9 @@ import { I18nService } from '../i18n/i18n.service';
         <a routerLink="/kontakt" routerLinkActive="active">{{
           i18n.t('nav.contact')
         }}</a>
+        <a class="nav-book" routerLink="/termin" routerLinkActive="active">{{
+          i18n.t('nav.book')
+        }}</a>
       </nav>
 
       <div
@@ -100,6 +103,13 @@ import { I18nService } from '../i18n/i18n.service';
     .site-nav a.active {
       border-bottom-color: var(--color-primary);
       font-weight: 600;
+    }
+    .site-nav a.nav-book {
+      background: var(--color-primary);
+      color: #fff;
+      border-radius: 999px;
+      padding: 0.3rem 0.8rem;
+      border-bottom: 0;
     }
     .lang-switch {
       display: inline-flex;

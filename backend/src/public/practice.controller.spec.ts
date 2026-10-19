@@ -16,7 +16,12 @@ describe('PublicPracticeController', () => {
   it('never leaks the seed (operational) data', () => {
     const result = controller.getPractice();
 
-    expect(Object.keys(result).sort()).toEqual(['branding', 'contact', 'legal']);
+    expect(Object.keys(result).sort()).toEqual([
+      'branding',
+      'contact',
+      'legal',
+      'timezone',
+    ]);
     expect(result).not.toHaveProperty('seed');
   });
 });

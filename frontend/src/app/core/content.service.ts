@@ -13,6 +13,7 @@ export interface PublicService {
 
 /** An active team member as served by GET /api/public/team. */
 export interface PublicTeamMember {
+  id: string;
   firstName: string;
   lastName: string;
   title: string | null;

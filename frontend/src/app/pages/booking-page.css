@@ -1,0 +1,99 @@
+.booking {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  margin-top: 1rem;
+  max-width: 40rem;
+}
+
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  align-items: end;
+}
+
+label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+label > span {
+  font-size: 0.9rem;
+  color: var(--color-muted);
+}
+
+select,
+input[type='date'],
+input[type='email'],
+input[type='tel'],
+input:not([type]) {
+  padding: 0.45rem 0.6rem;
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  font: inherit;
+  background: var(--color-surface);
+}
+
+.load,
+.submit {
+  background: var(--color-primary);
+  color: #fff;
+  border: 0;
+  border-radius: 999px;
+  padding: 0.55rem 1.1rem;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.load[disabled],
+.submit[disabled] {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.slots {
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.slot {
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  border-radius: 999px;
+  padding: 0.4rem 0.8rem;
+  cursor: pointer;
+  font: inherit;
+}
+
+.slot.selected {
+  background: var(--color-primary);
+  color: #fff;
+  border-color: var(--color-primary);
+}
+
+.patient {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.consent {
+  flex-direction: row;
+  align-items: start;
+  gap: 0.5rem;
+}
+
+.error {
+  color: #b91c1c;
+}
+
+.confirmed .appt {
+  font-weight: 600;
+  font-size: 1.1rem;
+}

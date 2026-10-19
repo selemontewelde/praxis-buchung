@@ -34,6 +34,7 @@ export class PublicContentController {
   @Get('services')
   async getServices(): Promise<PublicService[]> {
     const services = await this.prisma.service.findMany({
+      where: { active: true },
       orderBy: { name: 'asc' },
     });
     return services.map((service) => ({

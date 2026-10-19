@@ -59,7 +59,7 @@ export class BookingService {
     const service = await this.prisma.service.findUnique({
       where: { id: input.serviceId },
     });
-    if (service === null) {
+    if (service === null || !service.active) {
       throw new NotFoundException(`Unknown service: ${input.serviceId}`);
     }
 

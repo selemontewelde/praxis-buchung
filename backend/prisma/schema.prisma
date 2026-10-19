@@ -83,6 +83,7 @@ model Service {
   durationMin   Int // fixed duration in minutes
   descriptionDe String? // public description shown on the services page (German)
   descriptionEn String? // public description shown on the services page (English)
+  active        Boolean  @default(true) // archived services (false) are hidden from the public + booking
   createdAt     DateTime @default(now()) @db.Timestamptz(3)
   updatedAt     DateTime @updatedAt @db.Timestamptz(3)
 

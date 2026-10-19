@@ -54,9 +54,9 @@ export class SlotService {
     const service = await this.prisma.service.findUnique({
       where: { id: serviceId },
     });
-    // An unknown service yields no availability (empty), not an error: serviceId
-    // is a free-form identifier and callers treat "no slots" uniformly.
-    if (service === null) {
+    // An unknown or archived service yields no availability (empty), not an error:
+    // serviceId is a free-form identifier and callers treat "no slots" uniformly.
+    if (service === null || !service.active) {
       return [];
     }
 

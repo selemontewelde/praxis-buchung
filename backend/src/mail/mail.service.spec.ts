@@ -47,4 +47,21 @@ describe('MailService', () => {
     const mail = sendMail.mock.calls[0][0] as { subject: string };
     expect(mail.subject).toContain('Terminabsage');
   });
+
+  it('sends a reminder with no cancel link and a phone number', async () => {
+    sendMail.mockClear();
+    await new MailService().sendReminder({
+      to: 'pat@example.com',
+      patientName: 'Pat',
+      serviceName: 'Physiotherapie',
+      therapistName: 'Anna Keller',
+      startAt: new Date('2026-06-20T08:00:00.000Z'),
+    });
+
+    expect(sendMail).toHaveBeenCalledOnce();
+    const mail = sendMail.mock.calls[0][0] as { subject: string; text: string };
+    expect(mail.subject).toContain('Terminerinnerung');
+    expect(mail.text).not.toContain('/stornieren');
+    expect(mail.text).toMatch(/\+41/); // practice phone for short-notice changes
+  });
 });

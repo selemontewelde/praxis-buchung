@@ -58,11 +58,22 @@ export function validatePracticeConfig(config: PracticeConfig): void {
     problems.push(`invalid timezone "${config.timezone}"`);
   }
 
-  const { gridMin, bufferMin, minLeadMinutes, horizonDays, cancellationDeadlineHours } =
-    config.booking;
+  const {
+    gridMin,
+    bufferMin,
+    minLeadMinutes,
+    horizonDays,
+    cancellationDeadlineHours,
+    reminderHoursBefore,
+  } = config.booking;
   if (cancellationDeadlineHours < 0) {
     problems.push(
       `booking.cancellationDeadlineHours must not be negative, got ${cancellationDeadlineHours}`,
+    );
+  }
+  if (reminderHoursBefore < 0) {
+    problems.push(
+      `booking.reminderHoursBefore must not be negative, got ${reminderHoursBefore}`,
     );
   }
   if (gridMin <= 0) {

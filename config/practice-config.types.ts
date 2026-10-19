@@ -42,6 +42,8 @@ export interface Booking {
   horizonDays: number;
   /** Patients may cancel until this many hours before the appointment start. */
   cancellationDeadlineHours: number;
+  /** A reminder email is sent this many hours before the appointment start. */
+  reminderHoursBefore: number;
 }
 
 export interface Branding {

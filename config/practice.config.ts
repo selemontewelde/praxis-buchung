@@ -42,6 +42,7 @@ export const practiceConfig: PracticeConfig = {
     minLeadMinutes: 120, // no bookings within the next 2 hours
     horizonDays: 60,
     cancellationDeadlineHours: 24,
+    reminderHoursBefore: 24,
   },
 
   seed: {

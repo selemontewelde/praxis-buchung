@@ -121,6 +121,18 @@ describe('SlotService.getAvailableSlots', () => {
     );
   });
 
+  it('clamps a past date range to the bookable window (no slots, no runaway iteration)', async () => {
+    // Range entirely in the past relative to NOW → clamped away → empty.
+    const service = new SlotService(makePrisma({}));
+    const result = await service.getAvailableSlots({
+      serviceId: 'physio',
+      fromDate: '2020-01-01',
+      toDate: '2020-01-10',
+      now: NOW,
+    });
+    expect(result[0].slots).toEqual([]);
+  });
+
   it('returns nothing for an unknown service', async () => {
     const prisma = makePrisma({});
     (prisma.service.findUnique as ReturnType<typeof vi.fn>).mockResolvedValue(

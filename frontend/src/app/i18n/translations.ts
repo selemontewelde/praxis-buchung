@@ -103,6 +103,24 @@ const de = {
   'admin.loginFailed': 'Anmeldung fehlgeschlagen. E-Mail oder Passwort falsch.',
   'admin.loggedInAs': 'Angemeldet als',
   'admin.logout': 'Abmelden',
+
+  'adminTherapists.nav': 'Team verwalten',
+  'adminTherapists.title': 'Team verwalten',
+  'adminTherapists.create': 'Therapeut:in anlegen',
+  'adminTherapists.firstName': 'Vorname',
+  'adminTherapists.lastName': 'Nachname',
+  'adminTherapists.titleLabel': 'Titel',
+  'adminTherapists.roleDe': 'Rolle (DE)',
+  'adminTherapists.roleEn': 'Rolle (EN)',
+  'adminTherapists.photoUrl': 'Foto-Pfad',
+  'adminTherapists.activeFrom': 'Aktiv ab',
+  'adminTherapists.activeUntil': 'Aktiv bis',
+  'adminTherapists.save': 'Anlegen',
+  'adminTherapists.active': 'aktiv',
+  'adminTherapists.inactive': 'inaktiv',
+  'adminTherapists.deactivate': 'Deaktivieren',
+  'adminTherapists.reactivate': 'Reaktivieren',
+  'adminTherapists.capabilities': 'Leistungen',
 } as const;
 
 export type TranslationKey = keyof typeof de;
@@ -203,6 +221,24 @@ const en: Record<TranslationKey, string> = {
   'admin.loginFailed': 'Login failed. Wrong email or password.',
   'admin.loggedInAs': 'Logged in as',
   'admin.logout': 'Log out',
+
+  'adminTherapists.nav': 'Manage team',
+  'adminTherapists.title': 'Manage team',
+  'adminTherapists.create': 'Add therapist',
+  'adminTherapists.firstName': 'First name',
+  'adminTherapists.lastName': 'Last name',
+  'adminTherapists.titleLabel': 'Title',
+  'adminTherapists.roleDe': 'Role (DE)',
+  'adminTherapists.roleEn': 'Role (EN)',
+  'adminTherapists.photoUrl': 'Photo path',
+  'adminTherapists.activeFrom': 'Active from',
+  'adminTherapists.activeUntil': 'Active until',
+  'adminTherapists.save': 'Create',
+  'adminTherapists.active': 'active',
+  'adminTherapists.inactive': 'inactive',
+  'adminTherapists.deactivate': 'Deactivate',
+  'adminTherapists.reactivate': 'Reactivate',
+  'adminTherapists.capabilities': 'Services',
 };
 
 export const translations: Record<Language, Record<TranslationKey, string>> = {

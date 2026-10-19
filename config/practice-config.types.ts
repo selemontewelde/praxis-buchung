@@ -40,6 +40,8 @@ export interface Booking {
   minLeadMinutes: number;
   /** How far into the future bookings are offered, in days. */
   horizonDays: number;
+  /** Patients may cancel until this many hours before the appointment start. */
+  cancellationDeadlineHours: number;
 }
 
 export interface Branding {

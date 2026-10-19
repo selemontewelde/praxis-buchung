@@ -25,6 +25,14 @@ export interface BookingConfirmation {
   status: 'BOOKED';
 }
 
+export interface CancellationView {
+  serviceName: string;
+  therapistName: string;
+  startAt: string;
+  status: 'BOOKED' | 'CANCELLED';
+  cancellable: boolean;
+}
+
 /** Thin client for the availability and booking endpoints. */
 @Injectable({ providedIn: 'root' })
 export class BookingApiService {
@@ -51,6 +59,23 @@ export class BookingApiService {
   createBooking(payload: BookingPayload): Promise<BookingConfirmation> {
     return firstValueFrom(
       this.http.post<BookingConfirmation>('/api/public/bookings', payload),
+    );
+  }
+
+  getCancellation(token: string): Promise<CancellationView> {
+    return firstValueFrom(
+      this.http.get<CancellationView>(
+        `/api/public/cancellations/${encodeURIComponent(token)}`,
+      ),
+    );
+  }
+
+  cancelBooking(token: string): Promise<{ status: 'CANCELLED' }> {
+    return firstValueFrom(
+      this.http.post<{ status: 'CANCELLED' }>(
+        `/api/public/cancellations/${encodeURIComponent(token)}`,
+        {},
+      ),
     );
   }
 }

@@ -1,12 +1,20 @@
+import { randomUUID } from 'node:crypto';
 import {
   ConflictException,
   Injectable,
+  Logger,
   NotFoundException,
 } from '@nestjs/common';
 import { practiceConfig } from '@praxis-buchung/config';
 import { DateTime } from 'luxon';
+import { MailService } from '../mail/mail.service.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { SlotService } from '../slots/slot.service.js';
+
+function cancelUrl(token: string): string {
+  const base = process.env.PUBLIC_BASE_URL ?? 'http://localhost:4200';
+  return `${base}/stornieren?token=${token}`;
+}
 
 export interface CreateBookingInput {
   serviceId: string;
@@ -39,9 +47,12 @@ function isOverlapViolation(error: unknown): boolean {
  */
 @Injectable()
 export class BookingService {
+  private readonly logger = new Logger(BookingService.name);
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly slots: SlotService,
+    private readonly mail: MailService,
   ) {}
 
   async create(input: CreateBookingInput, now = new Date()): Promise<BookingResult> {
@@ -73,12 +84,17 @@ export class BookingService {
     const forTherapist = offered.find(
       (t) => t.therapistId === input.therapistId,
     );
-    if (!forTherapist?.slots.includes(startAt.toISOString())) {
+    if (
+      forTherapist === undefined ||
+      !forTherapist.slots.includes(startAt.toISOString())
+    ) {
       throw new ConflictException('The selected slot is not available');
     }
 
+    const token = randomUUID();
+    let result: BookingResult;
     try {
-      return await this.prisma.$transaction(async (tx) => {
+      result = await this.prisma.$transaction(async (tx) => {
         const appointment = await tx.appointment.create({
           data: {
             therapistId: input.therapistId,
@@ -89,6 +105,7 @@ export class BookingService {
             patientName: input.patient.name,
             patientEmail: input.patient.email,
             patientPhone: input.patient.phone,
+            cancellationToken: token,
           },
         });
         await tx.consentRecord.create({
@@ -110,5 +127,24 @@ export class BookingService {
       }
       throw error;
     }
+
+    // Best-effort: a mail failure must not fail the (committed) booking.
+    try {
+      await this.mail.sendBookingConfirmation({
+        to: input.patient.email,
+        patientName: input.patient.name,
+        serviceName: service.name,
+        therapistName: `${forTherapist.firstName} ${forTherapist.lastName}`,
+        startAt: result.startAt,
+        cancelUrl: cancelUrl(token),
+      });
+    } catch (error) {
+      this.logger.error(
+        `Failed to send booking confirmation to ${input.patient.email}`,
+        error instanceof Error ? error.stack : String(error),
+      );
+    }
+
+    return result;
   }
 }

@@ -82,6 +82,17 @@ const de = {
   'booking.failed': 'Buchung fehlgeschlagen. Bitte versuchen Sie es erneut.',
   'booking.slotUnavailable':
     'Dieser Termin ist nicht mehr verfügbar. Bitte wählen Sie eine andere Zeit.',
+
+  'cancel.title': 'Termin stornieren',
+  'cancel.appointmentLabel': 'Ihr Termin:',
+  'cancel.confirm': 'Termin stornieren',
+  'cancel.cancelling': 'Wird storniert…',
+  'cancel.done': 'Ihr Termin wurde storniert. Sie erhalten eine Bestätigung per E-Mail.',
+  'cancel.alreadyCancelled': 'Dieser Termin wurde bereits storniert.',
+  'cancel.pleaseCall':
+    'Eine Online-Stornierung ist nicht mehr möglich. Bitte rufen Sie uns an:',
+  'cancel.notFound': 'Dieser Stornierungslink ist ungültig oder abgelaufen.',
+  'cancel.failed': 'Stornierung fehlgeschlagen. Bitte versuchen Sie es erneut.',
 } as const;
 
 export type TranslationKey = keyof typeof de;
@@ -160,6 +171,18 @@ const en: Record<TranslationKey, string> = {
   'booking.failed': 'Booking failed. Please try again.',
   'booking.slotUnavailable':
     'This slot is no longer available. Please choose another time.',
+
+  'cancel.title': 'Cancel appointment',
+  'cancel.appointmentLabel': 'Your appointment:',
+  'cancel.confirm': 'Cancel appointment',
+  'cancel.cancelling': 'Cancelling…',
+  'cancel.done':
+    'Your appointment has been cancelled. You will receive a confirmation email.',
+  'cancel.alreadyCancelled': 'This appointment has already been cancelled.',
+  'cancel.pleaseCall':
+    'Online cancellation is no longer possible. Please call us:',
+  'cancel.notFound': 'This cancellation link is invalid or has expired.',
+  'cancel.failed': 'Cancellation failed. Please try again.',
 };
 
 export const translations: Record<Language, Record<TranslationKey, string>> = {

@@ -69,6 +69,21 @@
           </label>
         }
       </fieldset>
+      @if (openAppointments()[t.id]?.length) {
+        <div class="open-appointments">
+          <p>{{ i18n.t('adminAppointments.openForTherapist') }}</p>
+          <ul>
+            @for (a of openAppointments()[t.id]; track a.id) {
+              <li>
+                <span>{{ formatInstant(a.startAt) }} · {{ a.patientName }} · {{ a.serviceName }}</span>
+                <button type="button" (click)="cancelAppointment(t.id, a.id)">
+                  {{ i18n.t('adminAppointments.cancel') }}
+                </button>
+              </li>
+            }
+          </ul>
+        </div>
+      }
     </li>
   }
 </ul>

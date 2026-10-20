@@ -11,10 +11,14 @@ DevOps portfolio reference.
 
 ## Live demo
 
-_Not yet deployed._ The stack is **deploy-ready** — a merge to `main` publishes
-images and (once a server is configured) deploys over SSH with automatic HTTPS;
-see [Deployment](#deployment) and [ADR-0009](docs/adr/0009-deployment-ghcr-ssh-compose-migrator.md).
-The live URL will go here.
+No permanent public instance runs by default — this is a template and portfolio
+reference, not a hosted service. The stack is **deploy-on-demand**: a merge to
+`main` builds and publishes the images, and pointing the pipeline at any server
+(set the deploy secrets and `DEPLOY_ENABLED=true`) brings up the full stack with
+automatic HTTPS in minutes. See [Deployment](#deployment) and
+[ADR-0009](docs/adr/0009-deployment-ghcr-ssh-compose-migrator.md). A live instance
+can be provisioned on request; the [screenshots](#screenshots) above show the
+running app end to end.
 
 ## Screenshots
 

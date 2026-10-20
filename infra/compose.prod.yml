@@ -73,6 +73,10 @@ services:
       MAIL_FROM: ${MAIL_FROM}
       SMTP_HOST: ${SMTP_HOST}
       SMTP_PORT: ${SMTP_PORT}
+      # Optional: set to authenticate against a real SMTP provider (empty = none).
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASS: ${SMTP_PASS:-}
+      SMTP_SECURE: ${SMTP_SECURE:-false}
       PUBLIC_BASE_URL: ${PUBLIC_BASE_URL}
     healthcheck:
       test:

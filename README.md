@@ -236,6 +236,15 @@ Deployment is automated from `main` and configured entirely under `infra/`:
 
 Rationale and trade-offs: [ADR-0009](docs/adr/0009-deployment-ghcr-ssh-compose-migrator.md).
 
+### Email (production)
+
+Locally, [Mailpit](http://localhost:8025) catches all mail — no configuration
+needed. For a real provider, set in the server `.env`: `SMTP_HOST`, `SMTP_PORT`,
+`SMTP_USER`, `SMTP_PASS`, and `MAIL_FROM`. When credentials are set the connection
+requires TLS (STARTTLS on port 587, or `SMTP_SECURE=true` for implicit TLS on port
+465), so the password is never sent in clear. `SMTP_PASS` is a secret — keep it in
+the server `.env`, never in git. See [`infra/.env.prod.example`](infra/.env.prod.example).
+
 ## Architecture decisions
 
 Significant, hard-to-reverse decisions are recorded as ADRs in

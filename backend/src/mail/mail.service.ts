@@ -1,7 +1,40 @@
 import { Injectable } from '@nestjs/common';
 import { practiceConfig } from '@praxis-buchung/config';
 import { DateTime } from 'luxon';
-import { createTransport, type Transporter } from 'nodemailer';
+import {
+  createTransport,
+  type Transporter,
+  type TransportOptions,
+} from 'nodemailer';
+
+/**
+ * Builds the SMTP transport options from the environment.
+ *
+ * - Local dev (Mailpit): SMTP_HOST/SMTP_PORT only, no credentials, no TLS — the
+ *   default and unchanged.
+ * - Production: set SMTP_USER + SMTP_PASS to authenticate. SMTP_SECURE=true uses
+ *   implicit TLS (port 465); otherwise, when credentials are present, STARTTLS is
+ *   required (port 587) so the password never travels in clear.
+ */
+export function smtpOptionsFromEnv(
+  env: NodeJS.ProcessEnv = process.env,
+): TransportOptions {
+  const user = env.SMTP_USER;
+  const pass = env.SMTP_PASS;
+  const secure = env.SMTP_SECURE === 'true';
+  const base = {
+    host: env.SMTP_HOST ?? 'localhost',
+    port: Number(env.SMTP_PORT ?? '1025'),
+    secure,
+  };
+  // Authenticate only when both are present (the `&&` narrows them to string);
+  // then require TLS so the password never travels in clear — STARTTLS on 587,
+  // or implicit TLS when SMTP_SECURE=true (465).
+  if (user && pass) {
+    return { ...base, auth: { user, pass }, requireTLS: !secure } as TransportOptions;
+  }
+  return base as TransportOptions;
+}
 
 export interface BookingEmailData {
   to: string;
@@ -32,11 +65,9 @@ export type ReminderEmailData = CancellationEmailData;
  */
 @Injectable()
 export class MailService {
-  private readonly transporter: Transporter = createTransport({
-    host: process.env.SMTP_HOST ?? 'localhost',
-    port: Number(process.env.SMTP_PORT ?? '1025'),
-    secure: false,
-  });
+  private readonly transporter: Transporter = createTransport(
+    smtpOptionsFromEnv(),
+  );
   private readonly from = process.env.MAIL_FROM ?? 'praxis@example.com';
 
   async sendBookingConfirmation(data: BookingEmailData): Promise<void> {

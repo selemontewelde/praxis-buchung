@@ -1,6 +1,6 @@
 # Development image for the NestJS backend (hot-reload via `nest start --watch`).
 # The lean, multi-stage *production* image arrives in milestone 8.
-FROM node:22-slim
+FROM node:26-slim
 
 WORKDIR /app
 

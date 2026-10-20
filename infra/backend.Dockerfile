@@ -5,7 +5,7 @@
 # just the backend. Stage 2 (runtime) keeps only production dependencies and the
 # built output, and runs as the unprivileged `node` user the base image provides.
 
-FROM node:22-slim AS builder
+FROM node:26-slim AS builder
 WORKDIR /app
 # .dockerignore keeps host node_modules / dist / the generated client out, so
 # they are produced fresh inside the image.
@@ -13,7 +13,7 @@ COPY . .
 RUN npm ci
 RUN npm run build --workspace backend
 
-FROM node:22-slim AS runtime
+FROM node:26-slim AS runtime
 WORKDIR /app
 ENV NODE_ENV=production
 # Install production dependencies only. --ignore-scripts skips `prisma generate`
@@ -47,7 +47,7 @@ CMD ["node", "dist/main.js"]
 # (not the whole workspace) into a throwaway dir, plus the schema, migrations and
 # prisma.config.ts. `migrate deploy` only applies committed SQL — it needs the
 # schema + migrations + DATABASE_URL, not the app's generated client.
-FROM node:22-slim AS migrator
+FROM node:26-slim AS migrator
 WORKDIR /opt/migrate
 ENV NODE_ENV=production
 RUN npm init -y >/dev/null && npm install --no-save prisma@7.10.1

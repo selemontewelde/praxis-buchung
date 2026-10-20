@@ -107,6 +107,49 @@ A practice is launched by editing **one file**: [`config/practice.config.ts`](co
 | `npm run start:frontend`| Serve the Angular dev server                   |
 | `npm run start:backend` | Run the NestJS API in watch mode               |
 
+## Backups & restore
+
+In production (`infra/compose.prod.yml`) a `backup` service dumps the database
+once a day and keeps the recent dumps:
+
+- **What:** `pg_dump` of the whole database, gzipped, written to `./backups/` next
+  to the compose file on the server as `backup-<timestamp>.sql.gz`.
+- **When / retention:** daily at `BACKUP_HOUR` (default `03:00`, in `TZ`), keeping
+  `BACKUP_RETENTION_DAYS` days (default `7`). See `infra/.env.prod.example`.
+- **On demand:** `docker compose -f compose.prod.yml exec backup sh /backup.sh once`.
+- Copy `./backups/` **offsite** periodically (e.g. `scp` or object storage) — the
+  on-server copy alone does not survive losing the server.
+- **Dumps contain personal data** (patient names and contact details). Under the
+  revDSG, keep them access-controlled and encrypted at rest, and delete offsite
+  copies on the same retention schedule.
+
+### Restore a backup
+
+Run on the server, from the directory holding `compose.prod.yml` and `.env`.
+
+```bash
+# 0. Load the DB name/user/password from .env into this shell.
+set -a; . ./.env; set +a
+
+# 1. Pick a dump.
+ls -1 backups/
+
+# 2. Stop everything that writes (app + the backup job), keep Postgres running.
+docker compose -f compose.prod.yml stop backend frontend caddy backup
+
+# 3. Drop and recreate the database, then load the dump into it.
+docker compose -f compose.prod.yml exec -T postgres \
+  psql -U "$POSTGRES_USER" -d postgres \
+  -c "DROP DATABASE IF EXISTS \"$POSTGRES_DB\";" -c "CREATE DATABASE \"$POSTGRES_DB\";"
+gunzip -c backups/backup-<timestamp>.sql.gz | \
+  docker compose -f compose.prod.yml exec -T postgres psql -U "$POSTGRES_USER" -d "$POSTGRES_DB"
+
+# 4. Bring the app back up (the migrate service re-checks the schema first).
+docker compose -f compose.prod.yml up -d
+```
+
+To inspect a dump without restoring: `gunzip -c backups/backup-<timestamp>.sql.gz | less`.
+
 ## License
 
 UNLICENSED — all rights reserved.

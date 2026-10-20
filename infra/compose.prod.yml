@@ -23,6 +23,28 @@ services:
       timeout: 5s
       retries: 10
 
+  # Daily pg_dump backup. Reuses the Postgres image (so pg_dump matches the server
+  # version), runs backup.sh which dumps once a day and prunes old dumps. Backups
+  # land in the host-mounted ./backups directory (easy to copy offsite).
+  backup:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      PGHOST: postgres
+      PGUSER: ${POSTGRES_USER:?set POSTGRES_USER in .env}
+      PGPASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
+      PGDATABASE: ${POSTGRES_DB:?set POSTGRES_DB in .env}
+      BACKUP_RETENTION_DAYS: ${BACKUP_RETENTION_DAYS:-7}
+      BACKUP_HOUR: ${BACKUP_HOUR:-3}
+      TZ: ${TZ:-Europe/Zurich} # so "03:00" is the practice's local time
+    volumes:
+      - ./backup.sh:/backup.sh:ro
+      - ./backups:/backups
+    entrypoint: ['sh', '/backup.sh']
+
   # One-off: applies pending Prisma migrations, then exits. The backend waits for
   # it to finish successfully, so the schema is always current before the app
   # serves traffic. Not restarted (restart: "no").

@@ -22,6 +22,9 @@ config/*.js.map
 !infra/.env.prod.example
 *.local
 
+# Local/produced database dumps (never commit backups)
+infra/backups/
+
 # Test / coverage
 coverage/
 

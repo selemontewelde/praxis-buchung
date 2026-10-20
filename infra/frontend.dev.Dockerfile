@@ -1,7 +1,7 @@
 # Development image for the Angular frontend (dev server with live reload).
 # The lean, multi-stage *production* image (static build behind Caddy) arrives in
 # milestone 8.
-FROM node:22-slim
+FROM node:26-slim
 
 WORKDIR /app
 

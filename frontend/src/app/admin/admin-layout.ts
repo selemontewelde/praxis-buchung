@@ -3,6 +3,7 @@ import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/rou
 import { PracticeService } from '../core/practice.service';
 import { I18nService } from '../i18n/i18n.service';
 import { AdminAuthService } from './admin-auth.service';
+import { ADMIN_SECTIONS } from './admin-sections';
 import { AdminThemeService } from './admin-theme.service';
 
 /**
@@ -33,21 +34,11 @@ import { AdminThemeService } from './admin-theme.service';
             [routerLinkActiveOptions]="{ exact: true }"
             >{{ i18n.t('admin.nav.overview') }}</a
           >
-          <a routerLink="/admin/therapists" routerLinkActive="active">{{
-            i18n.t('adminTherapists.nav')
-          }}</a>
-          <a routerLink="/admin/hours" routerLinkActive="active">{{
-            i18n.t('adminHours.nav')
-          }}</a>
-          <a routerLink="/admin/blocks" routerLinkActive="active">{{
-            i18n.t('adminBlocks.nav')
-          }}</a>
-          <a routerLink="/admin/services" routerLinkActive="active">{{
-            i18n.t('adminServices.nav')
-          }}</a>
-          <a routerLink="/admin/appointments" routerLinkActive="active">{{
-            i18n.t('adminAppointments.nav')
-          }}</a>
+          @for (section of sections; track section.link) {
+            <a [routerLink]="section.link" routerLinkActive="active">{{
+              i18n.t(section.key)
+            }}</a>
+          }
         </nav>
 
         <div class="admin-actions">
@@ -166,6 +157,7 @@ export class AdminLayout implements OnDestroy {
   protected readonly practice = inject(PracticeService);
   protected readonly auth = inject(AdminAuthService);
   protected readonly theme = inject(AdminThemeService);
+  protected readonly sections = ADMIN_SECTIONS;
   private readonly router = inject(Router);
 
   constructor() {

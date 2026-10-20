@@ -17,12 +17,20 @@ export class App {
   private readonly router = inject(Router);
 
   // The admin area brings its own top bar (AdminLayout), so the public header
-  // and footer are hidden there. Derived from the active URL on each navigation.
+  // and footer are hidden there (including /admin/login, which has no chrome).
+  // Derived from the active URL on each navigation.
   protected readonly isAdminArea = toSignal(
     this.router.events.pipe(
       filter((e) => e instanceof NavigationEnd),
-      map(() => this.router.url.startsWith('/admin')),
+      map(() => this.inAdminArea(this.router.url)),
     ),
-    { initialValue: this.router.url.startsWith('/admin') },
+    { initialValue: this.inAdminArea(this.router.url) },
   );
+
+  // Match the /admin route and its descendants, but not an unrelated path that
+  // merely starts with the same letters (e.g. /administration).
+  private inAdminArea(url: string): boolean {
+    const path = url.split(/[?#]/, 1)[0];
+    return path === '/admin' || path.startsWith('/admin/');
+  }
 }

@@ -2,6 +2,7 @@ import { Component, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { I18nService } from '../i18n/i18n.service';
 import { AdminAuthService } from './admin-auth.service';
+import { ADMIN_SECTIONS } from './admin-sections';
 
 // Admin landing: a greeting plus cards linking to the management sections.
 // Navigation, theme toggle and logout live in the surrounding AdminLayout shell.
@@ -13,8 +14,10 @@ import { AdminAuthService } from './admin-auth.service';
     <p class="who">{{ i18n.t('admin.loggedInAs') }} {{ auth.admin()?.email }}</p>
 
     <nav class="cards" [attr.aria-label]="i18n.t('admin.sections')">
-      @for (card of cards; track card.link) {
-        <a class="card" [routerLink]="card.link">{{ i18n.t(card.key) }}</a>
+      @for (section of sections; track section.link) {
+        <a class="card" [routerLink]="section.link">{{
+          i18n.t(section.key)
+        }}</a>
       }
     </nav>
   `,
@@ -56,12 +59,5 @@ import { AdminAuthService } from './admin-auth.service';
 export class AdminDashboardPage {
   protected readonly i18n = inject(I18nService);
   protected readonly auth = inject(AdminAuthService);
-
-  protected readonly cards = [
-    { link: '/admin/therapists', key: 'adminTherapists.nav' },
-    { link: '/admin/hours', key: 'adminHours.nav' },
-    { link: '/admin/blocks', key: 'adminBlocks.nav' },
-    { link: '/admin/services', key: 'adminServices.nav' },
-    { link: '/admin/appointments', key: 'adminAppointments.nav' },
-  ] as const;
+  protected readonly sections = ADMIN_SECTIONS;
 }

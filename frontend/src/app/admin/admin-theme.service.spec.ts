@@ -1,4 +1,5 @@
 import { TestBed } from '@angular/core/testing';
+import { vi } from 'vitest';
 import { AdminThemeService, ADMIN_THEME_STORAGE_KEY } from './admin-theme.service';
 
 describe('AdminThemeService', () => {

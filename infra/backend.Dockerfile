@@ -39,3 +39,20 @@ USER node
 EXPOSE 3000
 WORKDIR /app/backend
 CMD ["node", "dist/main.js"]
+
+# Migration runner: a one-off image that applies pending migrations before the
+# app starts, then exits (see the `migrate` service in compose.prod.yml). The
+# slim runtime stage above deliberately drops the Prisma CLI (a devDependency),
+# so migrations run from this separate image. It installs ONLY the Prisma CLI
+# (not the whole workspace) into a throwaway dir, plus the schema, migrations and
+# prisma.config.ts. `migrate deploy` only applies committed SQL — it needs the
+# schema + migrations + DATABASE_URL, not the app's generated client.
+FROM node:22-slim AS migrator
+WORKDIR /opt/migrate
+ENV NODE_ENV=production
+RUN npm init -y >/dev/null && npm install --no-save prisma@7.10.1
+COPY backend/prisma ./prisma
+COPY backend/prisma.config.ts ./
+USER node
+# Call the locally installed CLI directly (no npx lookup / no cache write).
+CMD ["./node_modules/.bin/prisma", "migrate", "deploy"]

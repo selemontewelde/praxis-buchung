@@ -101,8 +101,15 @@ jobs:
         image:
           - name: backend
             dockerfile: infra/backend.Dockerfile
+            target: runtime
           - name: frontend
             dockerfile: infra/frontend.Dockerfile
+            target: runtime
+          # One-off migration runner (Prisma CLI + schema), used by the `migrate`
+          # service in compose.prod.yml before the backend starts.
+          - name: migrate
+            dockerfile: infra/backend.Dockerfile
+            target: migrator
     steps:
       - name: Check out the repository
         uses: actions/checkout@v7
@@ -138,8 +145,72 @@ jobs:
         with:
           context: .
           file: ${{ matrix.image.dockerfile }}
+          target: ${{ matrix.image.target }}
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha,scope=${{ matrix.image.name }}
           cache-to: type=gha,mode=max,scope=${{ matrix.image.name }}
+
+  # Deploy to the production server over SSH after the images are published.
+  # Dormant until the server exists: it only runs when the repo variable
+  # DEPLOY_ENABLED is "true" (set it once the SSH_* / DOMAIN secrets are in
+  # place), so main stays green in the meantime.
+  deploy:
+    name: Deploy to server
+    needs: publish
+    if: >-
+      github.event_name == 'push' && github.ref == 'refs/heads/main'
+      && vars.DEPLOY_ENABLED == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v7
+
+      # The short SHA matches the `sha-<commit>` image tag metadata-action pushes,
+      # so the deploy runs the exact image built from this commit (not a moving
+      # `latest` that a concurrent merge could change under it).
+      - name: Compute the image tag
+        id: tag
+        run: echo "image_tag=sha-$(git rev-parse --short=7 HEAD)" >> "$GITHUB_OUTPUT"
+
+      # Copy the compose file and Caddyfile to the server (strip the infra/
+      # prefix so they land next to the server-side .env). Third-party actions are
+      # pinned by commit SHA (supply-chain hardening), with the version in a trailer.
+      - name: Copy deploy files to the server
+        uses: appleboy/scp-action@ff85246acaad7bdce478db94a363cd2bf7c90345 # v1.0.0
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          source: infra/compose.prod.yml,infra/Caddyfile
+          target: ${{ secrets.DEPLOY_PATH }}
+          strip_components: 1
+
+      # Pull the images for this commit and (re)start the stack. The migrate
+      # service runs `prisma migrate deploy` before the backend starts (compose
+      # service_completed_successfully ordering), and Caddy fetches/renews the
+      # TLS certificate automatically for ${DOMAIN}. Secrets are passed through
+      # `envs` (not interpolated into the script) and the registry login is
+      # dropped again afterwards so no credential lingers on the server.
+      - name: Deploy over SSH
+        uses: appleboy/ssh-action@0ff4204d59e8e51228ff73bce53f80d53301dee2 # v1.2.5
+        env:
+          DEPLOY_PATH: ${{ secrets.DEPLOY_PATH }}
+          GHCR_USER: ${{ github.actor }}
+          GHCR_PAT: ${{ secrets.GHCR_PAT }}
+          IMAGE_TAG: ${{ steps.tag.outputs.image_tag }}
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          envs: DEPLOY_PATH,GHCR_USER,GHCR_PAT,IMAGE_TAG
+          script: |
+            set -eu
+            cd "$DEPLOY_PATH"
+            echo "$GHCR_PAT" | docker login ghcr.io -u "$GHCR_USER" --password-stdin
+            export IMAGE_TAG
+            docker compose -f compose.prod.yml pull
+            docker compose -f compose.prod.yml up -d --remove-orphans
+            docker logout ghcr.io
+            docker image prune -f

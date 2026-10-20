@@ -1,0 +1,96 @@
+name: praxis-buchung
+
+# Production stack, run on the server. Images are pulled from GHCR (published by
+# CI on merge to main). Only Caddy exposes ports; the app, migrate runner and
+# database stay on the internal compose network. Values come from a server-side
+# .env (see .env.prod.example).
+
+services:
+  postgres:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      # `:?` makes compose abort with a clear error if the var is unset, instead
+      # of silently substituting empty and producing a broken DATABASE_URL.
+      POSTGRES_USER: ${POSTGRES_USER:?set POSTGRES_USER in .env}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
+      POSTGRES_DB: ${POSTGRES_DB:?set POSTGRES_DB in .env}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # One-off: applies pending Prisma migrations, then exits. The backend waits for
+  # it to finish successfully, so the schema is always current before the app
+  # serves traffic. Not restarted (restart: "no").
+  migrate:
+    image: ghcr.io/selemontewelde/praxis-buchung-migrate:${IMAGE_TAG:-latest}
+    restart: 'no'
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+
+  backend:
+    image: ghcr.io/selemontewelde/praxis-buchung-backend:${IMAGE_TAG:-latest}
+    restart: unless-stopped
+    init: true # PID 1 init for clean signal handling / zombie reaping
+    depends_on:
+      postgres:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+      MAIL_FROM: ${MAIL_FROM}
+      SMTP_HOST: ${SMTP_HOST}
+      SMTP_PORT: ${SMTP_PORT}
+      PUBLIC_BASE_URL: ${PUBLIC_BASE_URL}
+    healthcheck:
+      test:
+        - CMD
+        - node
+        - -e
+        - "fetch('http://localhost:3000/health').then(r => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))"
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+
+  frontend:
+    image: ghcr.io/selemontewelde/praxis-buchung-frontend:${IMAGE_TAG:-latest}
+    restart: unless-stopped
+    depends_on:
+      backend:
+        condition: service_healthy
+
+  # Edge reverse proxy: terminates TLS (automatic HTTPS via Let's Encrypt for a
+  # real ${DOMAIN}; an internal self-signed cert for localhost), routes /api/* to
+  # the backend and everything else to the frontend.
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    depends_on:
+      - backend
+      - frontend
+    ports:
+      - '80:80'
+      - '443:443'
+    environment:
+      DOMAIN: ${DOMAIN:?set DOMAIN in .env (a domain, or localhost for a local test)}
+      ACME_EMAIL: ${ACME_EMAIL}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data # persisted certificates — keep across restarts
+      - caddy-config:/config
+
+volumes:
+  postgres-data:
+  caddy-data:
+  caddy-config:

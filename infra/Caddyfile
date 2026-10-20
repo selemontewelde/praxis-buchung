@@ -1,0 +1,24 @@
+# Edge reverse proxy for the production stack.
+#
+# Caddy gets a real Let's Encrypt certificate automatically when {$DOMAIN} is a
+# public domain pointing at this server; for DOMAIN=localhost it serves HTTPS
+# with its own internal CA (handy for local prod-like verification).
+
+{
+	# ACME contact address for Let's Encrypt (ignored for the internal/localhost CA).
+	email {$ACME_EMAIL}
+}
+
+{$DOMAIN} {
+	encode gzip
+
+	# API calls go to the NestJS backend...
+	handle /api/* {
+		reverse_proxy backend:3000
+	}
+
+	# ...everything else is the Angular SPA served by nginx.
+	handle {
+		reverse_proxy frontend:8080
+	}
+}

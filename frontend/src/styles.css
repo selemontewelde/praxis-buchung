@@ -13,6 +13,20 @@
   --color-border: #e5e7eb;
 }
 
+/* Admin cockpit theme (Solarized). Scoped to the admin area: AdminLayout sets
+ * data-admin-theme on <body> while it is mounted, so these tokens cascade to
+ * every admin page. Light admin reuses the default (public) tokens above; only
+ * the dark variant overrides them. The public site is never affected. */
+body[data-admin-theme='dark'] {
+  --color-primary: #2aa198; /* Solarized cyan — near the teal brand */
+  --color-accent: #b58900; /* Solarized yellow */
+  --color-text: #93a1a1; /* base1 */
+  --color-muted: #586e75; /* base01 */
+  --color-surface: #073642; /* base02 */
+  --color-bg: #002b36; /* base03 */
+  --color-border: #0e4b59;
+}
+
 *,
 *::before,
 *::after {

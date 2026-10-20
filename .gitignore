@@ -19,6 +19,7 @@ config/*.js.map
 .env
 .env.*
 !.env.example
+!infra/.env.prod.example
 *.local
 
 # Test / coverage

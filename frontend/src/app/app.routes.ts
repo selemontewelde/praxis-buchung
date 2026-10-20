@@ -47,44 +47,52 @@ export const routes: Routes = [
       import('./admin/admin-login-page').then((m) => m.AdminLoginPage),
   },
   {
+    // The admin shell wraps every /admin/* page in the themed top-bar layout.
+    // The guard sits on the parent, so all children inherit authentication.
     path: 'admin',
     canActivate: [adminAuthGuard],
     loadComponent: () =>
-      import('./admin/admin-dashboard-page').then((m) => m.AdminDashboardPage),
-  },
-  {
-    path: 'admin/therapists',
-    canActivate: [adminAuthGuard],
-    loadComponent: () =>
-      import('./admin/admin-therapists-page').then(
-        (m) => m.AdminTherapistsPage,
-      ),
-  },
-  {
-    path: 'admin/hours',
-    canActivate: [adminAuthGuard],
-    loadComponent: () =>
-      import('./admin/admin-hours-page').then((m) => m.AdminHoursPage),
-  },
-  {
-    path: 'admin/blocks',
-    canActivate: [adminAuthGuard],
-    loadComponent: () =>
-      import('./admin/admin-blocks-page').then((m) => m.AdminBlocksPage),
-  },
-  {
-    path: 'admin/services',
-    canActivate: [adminAuthGuard],
-    loadComponent: () =>
-      import('./admin/admin-services-page').then((m) => m.AdminServicesPage),
-  },
-  {
-    path: 'admin/appointments',
-    canActivate: [adminAuthGuard],
-    loadComponent: () =>
-      import('./admin/admin-appointments-page').then(
-        (m) => m.AdminAppointmentsPage,
-      ),
+      import('./admin/admin-layout').then((m) => m.AdminLayout),
+    children: [
+      {
+        path: '',
+        loadComponent: () =>
+          import('./admin/admin-dashboard-page').then(
+            (m) => m.AdminDashboardPage,
+          ),
+      },
+      {
+        path: 'therapists',
+        loadComponent: () =>
+          import('./admin/admin-therapists-page').then(
+            (m) => m.AdminTherapistsPage,
+          ),
+      },
+      {
+        path: 'hours',
+        loadComponent: () =>
+          import('./admin/admin-hours-page').then((m) => m.AdminHoursPage),
+      },
+      {
+        path: 'blocks',
+        loadComponent: () =>
+          import('./admin/admin-blocks-page').then((m) => m.AdminBlocksPage),
+      },
+      {
+        path: 'services',
+        loadComponent: () =>
+          import('./admin/admin-services-page').then(
+            (m) => m.AdminServicesPage,
+          ),
+      },
+      {
+        path: 'appointments',
+        loadComponent: () =>
+          import('./admin/admin-appointments-page').then(
+            (m) => m.AdminAppointmentsPage,
+          ),
+      },
+    ],
   },
   { path: '**', redirectTo: '' },
 ];

@@ -103,6 +103,11 @@ const de = {
   'admin.loginFailed': 'Anmeldung fehlgeschlagen. E-Mail oder Passwort falsch.',
   'admin.loggedInAs': 'Angemeldet als',
   'admin.logout': 'Abmelden',
+  'admin.nav.overview': 'Übersicht',
+  'admin.sections': 'Verwaltung',
+  'admin.themeToggle': 'Design umschalten',
+  'admin.themeDark': 'Dunkel',
+  'admin.themeLight': 'Hell',
 
   'adminTherapists.nav': 'Team verwalten',
   'adminTherapists.title': 'Team verwalten',
@@ -283,6 +288,11 @@ const en: Record<TranslationKey, string> = {
   'admin.loginFailed': 'Login failed. Wrong email or password.',
   'admin.loggedInAs': 'Logged in as',
   'admin.logout': 'Log out',
+  'admin.nav.overview': 'Overview',
+  'admin.sections': 'Management',
+  'admin.themeToggle': 'Toggle theme',
+  'admin.themeDark': 'Dark',
+  'admin.themeLight': 'Light',
 
   'adminTherapists.nav': 'Manage team',
   'adminTherapists.title': 'Manage team',

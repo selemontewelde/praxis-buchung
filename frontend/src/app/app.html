@@ -1,6 +1,8 @@
 <a class="skip-link" href="#main-content">{{ i18n.t('a11y.skipToContent') }}</a>
 
-<app-header />
+@if (!isAdminArea()) {
+  <app-header />
+}
 
 <main id="main-content" class="site-main" tabindex="-1">
   <div class="container">
@@ -8,4 +10,6 @@
   </div>
 </main>
 
-<app-footer />
+@if (!isAdminArea()) {
+  <app-footer />
+}

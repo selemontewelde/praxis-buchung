@@ -1,44 +1,63 @@
 import { Component, inject } from '@angular/core';
-import { Router, RouterLink } from '@angular/router';
+import { RouterLink } from '@angular/router';
 import { I18nService } from '../i18n/i18n.service';
 import { AdminAuthService } from './admin-auth.service';
+import { ADMIN_SECTIONS } from './admin-sections';
 
-// Admin landing. Management sections are added issue by issue (#19–#22).
+// Admin landing: a greeting plus cards linking to the management sections.
+// Navigation, theme toggle and logout live in the surrounding AdminLayout shell.
 @Component({
   selector: 'app-admin-dashboard-page',
   imports: [RouterLink],
   template: `
     <h1>{{ i18n.t('admin.title') }}</h1>
-    <p>{{ i18n.t('admin.loggedInAs') }} {{ auth.admin()?.email }}</p>
-    <nav class="admin-nav">
-      <a routerLink="/admin/therapists">{{ i18n.t('adminTherapists.nav') }}</a>
-      <a routerLink="/admin/hours">{{ i18n.t('adminHours.nav') }}</a>
-      <a routerLink="/admin/blocks">{{ i18n.t('adminBlocks.nav') }}</a>
-      <a routerLink="/admin/services">{{ i18n.t('adminServices.nav') }}</a>
-      <a routerLink="/admin/appointments">{{ i18n.t('adminAppointments.nav') }}</a>
+    <p class="who">{{ i18n.t('admin.loggedInAs') }} {{ auth.admin()?.email }}</p>
+
+    <nav class="cards" [attr.aria-label]="i18n.t('admin.sections')">
+      @for (section of sections; track section.link) {
+        <a class="card" [routerLink]="section.link">{{
+          i18n.t(section.key)
+        }}</a>
+      }
     </nav>
-    <button type="button" (click)="logout()">{{ i18n.t('admin.logout') }}</button>
   `,
   styles: `
-    button {
-      background: var(--color-primary);
-      color: #fff;
-      border: 0;
-      border-radius: 999px;
-      padding: 0.55rem 1.1rem;
-      font: inherit;
+    .who {
+      color: var(--color-muted);
+    }
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(14rem, 1fr));
+      gap: 1rem;
+      margin-top: 1.5rem;
+    }
+    .card {
+      display: block;
+      padding: 1.1rem 1.25rem;
+      border: 1px solid var(--color-border);
+      border-radius: 12px;
+      background: var(--color-surface);
+      color: var(--color-primary);
       font-weight: 600;
-      cursor: pointer;
+      text-decoration: none;
+    }
+    .card:hover {
+      border-color: var(--color-primary);
+    }
+    @media (prefers-reduced-motion: no-preference) {
+      .card {
+        transition:
+          border-color 0.15s ease,
+          transform 0.15s ease;
+      }
+      .card:hover {
+        transform: translateY(-2px);
+      }
     }
   `,
 })
 export class AdminDashboardPage {
   protected readonly i18n = inject(I18nService);
   protected readonly auth = inject(AdminAuthService);
-  private readonly router = inject(Router);
-
-  protected async logout(): Promise<void> {
-    await this.auth.logout();
-    await this.router.navigateByUrl('/admin/login');
-  }
+  protected readonly sections = ADMIN_SECTIONS;
 }

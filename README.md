@@ -124,6 +124,12 @@ docker compose up        # builds and starts the whole stack
 Ports are configurable via `.env`. Stop with `docker compose down` (add `-v` to
 also drop the Postgres volume).
 
+> **Upgrading from an older Postgres volume:** the stack runs Postgres 18. A data
+> volume created by an earlier major (e.g. 17) won't start under 18. On a dev
+> machine, reset it with `docker compose down -v` and re-seed; for data worth
+> keeping, dump with the old image first, then restore (see
+> [Backups & restore](#backups--restore)).
+
 ## Database (Prisma)
 
 The schema lives in `backend/prisma/schema.prisma`; the SQL migrations in

@@ -3,7 +3,7 @@
 # routing to the backend is handled by the edge Caddy reverse proxy (issue #25),
 # not here — this image only serves the SPA with a client-routing fallback.
 
-FROM node:26-slim AS builder
+FROM node:22-slim AS builder
 WORKDIR /app
 COPY . .
 RUN npm ci

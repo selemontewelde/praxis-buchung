@@ -39,7 +39,7 @@ survive restarts (and Let's Encrypt rate limits).
 
 **5. Backups are a sidecar using the same Postgres image.** A `backup` service
 runs `pg_dump` daily into a host-mounted directory with retention, reusing
-`postgres:17-alpine` so the dump tool always matches the server's version.
+`postgres:18-alpine` so the dump tool always matches the server's version.
 
 ## Consequences
 

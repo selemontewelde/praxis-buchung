@@ -22,6 +22,13 @@ updates:
         update-types:
           - minor
           - patch
+    ignore:
+      # Keep @types/node on the project's Node major (22). A newer major would
+      # type-check backend code against runtime APIs Node 22 doesn't have.
+      # Lift this deliberately when the project moves to a newer Node LTS.
+      - dependency-name: "@types/node"
+        update-types:
+          - version-update:semver-major
 
   # GitHub Actions — keeps the SHA-pinned third-party actions in the CI workflow
   # fresh (Dependabot updates both the pin and the version comment).
@@ -50,6 +57,13 @@ updates:
         update-types:
           - minor
           - patch
+    ignore:
+      # Pin the Node base image to the project's major (22). Bumping it here on
+      # its own diverges the containers from .nvmrc, CI and CLAUDE.md. Lift this
+      # together with .nvmrc when the project moves to a newer Node LTS.
+      - dependency-name: "node"
+        update-types:
+          - version-update:semver-major
 
   # Docker Compose — the images pinned in the compose files (postgres, caddy,
   # mailpit) that the Dockerfile scanner doesn't see.

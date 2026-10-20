@@ -7,6 +7,7 @@ import {
   Res,
   UseGuards,
 } from '@nestjs/common';
+import { Throttle } from '@nestjs/throttler';
 import type { CookieOptions, Request, Response } from 'express';
 import { AuthService, SESSION_COOKIE } from './auth.service.js';
 import { LoginDto } from './dto/login.dto.js';
@@ -30,6 +31,8 @@ function cookieOptions(expiresAt?: Date): CookieOptions {
 export class AuthController {
   constructor(private readonly auth: AuthService) {}
 
+  // Throttle login to blunt password brute-forcing (10 attempts/min per client).
+  @Throttle({ default: { ttl: 60_000, limit: 10 } })
   @Post('login')
   async login(
     @Body() dto: LoginDto,

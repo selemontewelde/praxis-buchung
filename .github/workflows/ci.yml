@@ -116,7 +116,7 @@ jobs:
 
       # Buildx enables the GitHub Actions build cache below.
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+        uses: docker/setup-buildx-action@v4
 
       # Log in to GHCR as the actor who pushed, using the built-in token (no PAT).
       - name: Log in to GHCR

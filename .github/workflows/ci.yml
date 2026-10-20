@@ -120,7 +120,7 @@ jobs:
 
       # Log in to GHCR as the actor who pushed, using the built-in token (no PAT).
       - name: Log in to GHCR
-        uses: docker/login-action@v3
+        uses: docker/login-action@v4
         with:
           registry: ghcr.io
           username: ${{ github.actor }}

@@ -25,6 +25,11 @@ config/*.js.map
 # Local/produced database dumps (never commit backups)
 infra/backups/
 
+# Playwright E2E output
+frontend/test-results/
+frontend/playwright-report/
+frontend/playwright/.cache/
+
 # Test / coverage
 coverage/
 

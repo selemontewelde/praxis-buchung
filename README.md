@@ -107,6 +107,25 @@ A practice is launched by editing **one file**: [`config/practice.config.ts`](co
 | `npm run start:frontend`| Serve the Angular dev server                   |
 | `npm run start:backend` | Run the NestJS API in watch mode               |
 
+## End-to-end booking test
+
+A local [Playwright](https://playwright.dev) smoke test (`frontend/e2e/booking.spec.ts`)
+drives the whole booking flow through the real UI and API against the seeded demo
+practice. It runs against the running local stack (it is intentionally not part of
+CI yet):
+
+```bash
+# 1. Start the stack and seed the demo practice (DATABASE_URL from your .env).
+docker compose up -d
+npm run db:seed --workspace backend
+
+# 2. Install the browser once.
+cd frontend && npx playwright install chromium && cd ..
+
+# 3. Run the test.
+npm run e2e --workspace frontend
+```
+
 ## Backups & restore
 
 In production (`infra/compose.prod.yml`) a `backup` service dumps the database

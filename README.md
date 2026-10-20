@@ -9,6 +9,26 @@ DevOps portfolio reference.
 
 > Status: in active development. See the [GitHub issues](https://github.com/selemontewelde/praxis-buchung/issues) and milestones for progress.
 
+## Live demo
+
+_Not yet deployed._ The stack is **deploy-ready** — a merge to `main` publishes
+images and (once a server is configured) deploys over SSH with automatic HTTPS;
+see [Deployment](#deployment) and [ADR-0009](docs/adr/0009-deployment-ghcr-ssh-compose-migrator.md).
+The live URL will go here.
+
+## Screenshots
+
+| Public site | Online booking |
+| --- | --- |
+| [![Home](docs/screenshots/home.png)](docs/screenshots/home.png) | [![Booking](docs/screenshots/booking.png)](docs/screenshots/booking.png) |
+
+| Services | Admin back office |
+| --- | --- |
+| [![Services](docs/screenshots/services.png)](docs/screenshots/services.png) | [![Admin](docs/screenshots/admin.png)](docs/screenshots/admin.png) |
+
+Everything above is rendered from the single practice config and the seeded demo
+practice — a new practice changes only `config/practice.config.ts`.
+
 ## Tech stack
 
 | Layer      | Choice                                                        |
@@ -27,11 +47,41 @@ DevOps portfolio reference.
 ├── frontend/   # Angular app
 ├── backend/    # NestJS API
 ├── config/     # the single practice config (branding, contact, legal + demo seed)
-├── docs/       # PRD, ADRs, agent docs
-└── package.json  # npm workspaces root (scripts fan out to both apps)
+├── infra/      # production Dockerfiles, compose, Caddyfile, backup script
+├── docs/       # PRD, ADRs, screenshots, agent docs
+├── docker-compose.yml  # local dev stack
+└── package.json        # npm workspaces root (scripts fan out to both apps)
 ```
 
-`infra/` and `docker-compose.yml` arrive with the Docker milestone.
+## Architecture
+
+At runtime, Caddy is the only service exposed to the internet; it terminates TLS
+and routes to the Angular SPA (served by nginx) and the NestJS API. A one-off
+`migrate` job applies pending migrations before the API starts, and a `backup`
+sidecar dumps the database daily.
+
+```mermaid
+flowchart LR
+  user([Browser]) -->|HTTPS| caddy[Caddy<br/>reverse proxy + auto TLS]
+  caddy -->|/*| frontend[Angular SPA<br/>nginx]
+  caddy -->|/api/*| backend[NestJS API]
+  backend --> db[(PostgreSQL)]
+  migrate[migrate<br/>prisma migrate deploy] -. runs before .-> backend
+  migrate --> db
+  backup[backup<br/>daily pg_dump] --> db
+  backend -->|SMTP| mail[(Mail relay / Mailpit)]
+```
+
+A merge to `main` goes green → images → server, with no manual build on the box:
+
+```mermaid
+flowchart LR
+  pr[Pull request] --> ci{CI<br/>lint · typecheck<br/>unit + integration · build}
+  ci -->|green| merge[Merge to main]
+  merge --> publish[Build & push 3 images<br/>to GHCR, tagged by commit]
+  publish --> deploy[Deploy over SSH]
+  deploy --> server[compose pull → migrate → up<br/>Caddy fetches/renews TLS]
+```
 
 ## Prerequisites
 
@@ -168,6 +218,40 @@ docker compose -f compose.prod.yml up -d
 ```
 
 To inspect a dump without restoring: `gunzip -c backups/backup-<timestamp>.sql.gz | less`.
+
+## Deployment
+
+Deployment is automated from `main` and configured entirely under `infra/`:
+
+- **Images** — on merge to `main`, CI builds and pushes the `backend`, `frontend`
+  and `migrate` images to GHCR, tagged `latest` and `sha-<commit>`.
+- **Server** — the `deploy` job copies `infra/compose.prod.yml` + `Caddyfile` +
+  `backup.sh` to the server and runs `docker compose pull && up -d`. It stays
+  dormant until the repo variable `DEPLOY_ENABLED` is `true` and the SSH / domain
+  secrets exist, so `main` is green long before a server is provisioned.
+- **Migrations** run as a one-off `migrate` service before the backend starts.
+- **HTTPS** is automatic via Caddy (Let's Encrypt for a real domain).
+- **Config** — every production variable is documented in
+  [`infra/.env.prod.example`](infra/.env.prod.example).
+
+Rationale and trade-offs: [ADR-0009](docs/adr/0009-deployment-ghcr-ssh-compose-migrator.md).
+
+## Architecture decisions
+
+Significant, hard-to-reverse decisions are recorded as ADRs in
+[`docs/adr/`](docs/adr/):
+
+| ADR | Decision |
+| --- | --- |
+| [0001](docs/adr/0001-config-seeds-db-is-source-of-truth.md) | Config seeds the database; the DB is the source of truth for operational data |
+| [0002](docs/adr/0002-npm-workspaces-with-legacy-peer-deps.md) | A single npm-workspaces monorepo (with `legacy-peer-deps`) |
+| [0003](docs/adr/0003-prisma-7-driver-adapter.md) | Prisma 7 with the `pg` driver adapter (no Rust query engine) |
+| [0004](docs/adr/0004-practice-config-as-top-level-package.md) | The practice config as a top-level workspace package shared by both apps |
+| [0005](docs/adr/0005-signal-based-runtime-i18n.md) | Signal-based runtime i18n (DE/EN) with a compile-time key-parity check |
+| [0006](docs/adr/0006-slot-engine-time-model.md) | The slot engine's time model (minute-of-day domain, UTC instants, practice timezone) |
+| [0007](docs/adr/0007-double-booking-prevention-exclusion-constraint.md) | Double-booking prevented by a Postgres GiST exclusion constraint |
+| [0008](docs/adr/0008-admin-auth-server-side-sessions.md) | Admin auth via server-side sessions in an HTTP-only cookie (not JWT) |
+| [0009](docs/adr/0009-deployment-ghcr-ssh-compose-migrator.md) | Deployment: GHCR images, SSH + Compose, a one-off migrator, Caddy for HTTPS |
 
 ## License
 

@@ -8,11 +8,18 @@ on:
   push:
     branches: [main]
 
-# If new commits are pushed to the same branch/PR, cancel the in-progress run
-# instead of letting both finish — saves CI minutes.
+# If new commits are pushed to the same PR, cancel the in-progress run instead of
+# letting both finish — saves CI minutes. On main (push) we do NOT cancel: a
+# later merge must not interrupt an in-progress image publish and leave a
+# half-pushed, inconsistent image pair.
 concurrency:
   group: ci-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+# Least privilege by default: the CI job only needs to read the repo. The publish
+# job widens this to `packages: write` for itself.
+permissions:
+  contents: read
 
 jobs:
   ci:
@@ -75,3 +82,64 @@ jobs:
           npm run prisma:migrate:deploy --workspace backend
           npm run db:seed --workspace backend
           npm run test:int --workspace backend
+
+  # Build and publish the production images to GHCR — but only after the whole CI
+  # job above has passed (needs: ci) and only for a push to main (i.e. after a PR
+  # is merged), never for a pull request. Branch protection already keeps red PRs
+  # out of main, and this gate makes sure we never publish an image from a commit
+  # whose tests didn't pass.
+  publish:
+    name: Publish images to GHCR
+    needs: ci
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write # the built-in GITHUB_TOKEN may push to this repo's packages
+    strategy:
+      matrix:
+        image:
+          - name: backend
+            dockerfile: infra/backend.Dockerfile
+          - name: frontend
+            dockerfile: infra/frontend.Dockerfile
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v7
+
+      # Buildx enables the GitHub Actions build cache below.
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      # Log in to GHCR as the actor who pushed, using the built-in token (no PAT).
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # Derive the image name + tags: `latest` and a `sha-<commit>` tag so every
+      # image is traceable back to the exact commit it was built from.
+      - name: Compute image tags
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/${{ github.repository }}-${{ matrix.image.name }}
+          tags: |
+            type=raw,value=latest
+            type=sha
+
+      # Build the production image (context is the repo root, as the Dockerfiles
+      # expect) and push both tags. The GHA cache is scoped per image so the two
+      # builds don't clobber each other's layers.
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ${{ matrix.image.dockerfile }}
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha,scope=${{ matrix.image.name }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.image.name }}

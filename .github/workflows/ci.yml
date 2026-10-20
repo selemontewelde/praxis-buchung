@@ -141,7 +141,7 @@ jobs:
       # expect) and push both tags. The GHA cache is scoped per image so the two
       # builds don't clobber each other's layers.
       - name: Build and push
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: .
           file: ${{ matrix.image.dockerfile }}

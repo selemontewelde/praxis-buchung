@@ -12,6 +12,21 @@
 {$DOMAIN} {
 	encode gzip
 
+	# Site-wide security headers (cover both the SPA and the API).
+	header {
+		# HSTS: force HTTPS for a year (Caddy already redirects; this tells browsers).
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		X-Content-Type-Options "nosniff"
+		X-Frame-Options "DENY"
+		Referrer-Policy "no-referrer"
+		Permissions-Policy "geolocation=(), microphone=(), camera=()"
+		# Conservative CSP. 'unsafe-inline' for styles is required because Angular
+		# injects component styles as <style> elements; scripts are external only.
+		Content-Security-Policy "default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; font-src 'self'; connect-src 'self'; object-src 'none'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'; upgrade-insecure-requests"
+		# Don't advertise the server software.
+		-Server
+	}
+
 	# API calls go to the NestJS backend...
 	handle /api/* {
 		reverse_proxy backend:3000

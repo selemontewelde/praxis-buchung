@@ -42,4 +42,10 @@ describe('CreateBookingDto', () => {
     dto.startAt = 'not-a-date';
     expect(await errorProps(dto)).toContain('startAt');
   });
+
+  it('rejects an over-long patient name (bounds input size)', async () => {
+    const dto = valid();
+    (dto.patient as Record<string, unknown>).name = 'x'.repeat(101);
+    expect(await errorProps(dto)).toContain('patient');
+  });
 });

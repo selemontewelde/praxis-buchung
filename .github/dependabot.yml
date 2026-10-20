@@ -1,0 +1,68 @@
+# Dependabot keeps dependencies current across every ecosystem this repo uses.
+# Chosen over Renovate because it is native to GitHub (no third-party app) and
+# enough for a single maintainer; Renovate would add power we don't need here.
+#
+# Each ecosystem runs weekly and groups minor/patch bumps into one PR to keep the
+# noise down for a solo maintainer. Major bumps still arrive as separate PRs so
+# breaking changes get reviewed on their own. Dependabot adds the `dependencies`
+# label automatically.
+version: 2
+updates:
+  # npm — one root lockfile covers all workspaces (config, backend, frontend).
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: chore(deps)
+      prefix-development: chore(dev-deps)
+    groups:
+      npm-minor-and-patch:
+        update-types:
+          - minor
+          - patch
+
+  # GitHub Actions — keeps the SHA-pinned third-party actions in the CI workflow
+  # fresh (Dependabot updates both the pin and the version comment).
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    commit-message:
+      prefix: chore(ci)
+    groups:
+      actions:
+        update-types:
+          - minor
+          - patch
+
+  # Docker — base images in the Dockerfiles under infra/ (node, nginx). The
+  # fetcher matches any *.Dockerfile, so all four are covered.
+  - package-ecosystem: docker
+    directory: /infra
+    schedule:
+      interval: weekly
+    commit-message:
+      prefix: chore(docker)
+    groups:
+      docker-images:
+        update-types:
+          - minor
+          - patch
+
+  # Docker Compose — the images pinned in the compose files (postgres, caddy,
+  # mailpit) that the Dockerfile scanner doesn't see.
+  - package-ecosystem: docker-compose
+    directories:
+      - /
+      - /infra
+    schedule:
+      interval: weekly
+    commit-message:
+      prefix: chore(compose)
+    groups:
+      compose-images:
+        update-types:
+          - minor
+          - patch

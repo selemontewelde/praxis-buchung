@@ -130,7 +130,7 @@ jobs:
       # image is traceable back to the exact commit it was built from.
       - name: Compute image tags
         id: meta
-        uses: docker/metadata-action@v5
+        uses: docker/metadata-action@v6
         with:
           images: ghcr.io/${{ github.repository }}-${{ matrix.image.name }}
           tags: |

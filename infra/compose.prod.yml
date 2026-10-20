@@ -7,7 +7,7 @@ name: praxis-buchung
 
 services:
   postgres:
-    image: postgres:17-alpine
+    image: postgres:18-alpine
     restart: unless-stopped
     environment:
       # `:?` makes compose abort with a clear error if the var is unset, instead
@@ -27,7 +27,7 @@ services:
   # version), runs backup.sh which dumps once a day and prunes old dumps. Backups
   # land in the host-mounted ./backups directory (easy to copy offsite).
   backup:
-    image: postgres:17-alpine
+    image: postgres:18-alpine
     restart: unless-stopped
     depends_on:
       postgres:

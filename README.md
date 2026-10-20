@@ -18,13 +18,19 @@ The live URL will go here.
 
 ## Screenshots
 
-| Public site | Online booking |
-| --- | --- |
-| [![Home](docs/screenshots/home.png)](docs/screenshots/home.png) | [![Booking](docs/screenshots/booking.png)](docs/screenshots/booking.png) |
+The public site is light and themed from the practice config:
 
-| Services | Admin back office |
+| Home | Online booking | Services |
+| --- | --- | --- |
+| [![Home](docs/screenshots/home.png)](docs/screenshots/home.png) | [![Booking](docs/screenshots/booking.png)](docs/screenshots/booking.png) | [![Services](docs/screenshots/services.png)](docs/screenshots/services.png) |
+
+The admin back office is a separate **Solarized cockpit** with a light/dark
+toggle. The same pages re-skin entirely through CSS custom-property inheritance —
+the shell redefines the colour tokens once and every admin view follows:
+
+| Admin cockpit — dark | Admin cockpit — light |
 | --- | --- |
-| [![Services](docs/screenshots/services.png)](docs/screenshots/services.png) | [![Admin](docs/screenshots/admin.png)](docs/screenshots/admin.png) |
+| [![Admin dark](docs/screenshots/admin.png)](docs/screenshots/admin.png) | [![Admin light](docs/screenshots/admin-light.png)](docs/screenshots/admin-light.png) |
 
 Everything above is rendered from the single practice config and the seeded demo
 practice — a new practice changes only `config/practice.config.ts`.

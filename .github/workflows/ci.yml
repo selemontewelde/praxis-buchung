@@ -183,7 +183,7 @@ jobs:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_KEY }}
-          source: infra/compose.prod.yml,infra/Caddyfile
+          source: infra/compose.prod.yml,infra/Caddyfile,infra/backup.sh
           target: ${{ secrets.DEPLOY_PATH }}
           strip_components: 1
 

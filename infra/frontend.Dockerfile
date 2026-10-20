@@ -9,7 +9,7 @@ COPY . .
 RUN npm ci
 RUN npm run build --workspace frontend
 
-FROM nginxinc/nginx-unprivileged:1.27-alpine AS runtime
+FROM nginxinc/nginx-unprivileged:1.29-alpine AS runtime
 # SPA fallback: unknown paths serve index.html so Angular's router handles them.
 COPY infra/nginx.conf /etc/nginx/conf.d/default.conf
 COPY --from=builder /app/frontend/dist/frontend/browser /usr/share/nginx/html

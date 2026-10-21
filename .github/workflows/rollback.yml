@@ -1,0 +1,117 @@
+name: Rollback
+
+# Manually redeploy a PREVIOUSLY published image to production. A rollback never
+# rebuilds from source: it repulls the immutable images already in GHCR for a
+# known-good commit tag and restarts the stack, so production goes back to the
+# exact artifact that ran before. The mechanics mirror the deploy job in ci.yml;
+# only the image tag differs (an input here, HEAD's short SHA there).
+#
+# IMPORTANT: this rolls back application CODE, not the DATABASE SCHEMA. Prisma
+# migrations are forward-only — `prisma migrate deploy` applies pending ones and
+# never reverts — so an older image may run against a newer schema. Design
+# migrations to be backward-compatible; a schema change an old release cannot
+# tolerate needs a deliberate forward-fix, not a rollback.
+on:
+  workflow_dispatch:
+    inputs:
+      image_tag:
+        description: 'GHCR image tag to roll back to, e.g. sha-abc1234 (see the target commit''s "Publish images to GHCR" run).'
+        required: true
+        type: string
+
+# A production mutation must never overlap another: this is the same group the
+# deploy job in ci.yml uses, so a rollback and a merge-triggered deploy serialise.
+concurrency:
+  group: production-deploy
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  rollback:
+    name: Roll back to a published image
+    # Same dormancy gate as the deploy job: only runs once the server exists and
+    # the SSH_* / GHCR_PAT secrets are in place.
+    if: vars.DEPLOY_ENABLED == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      # The server-side compose file and Caddyfile come from the current repo,
+      # so a rollback keeps the latest infra definition and only swaps the app
+      # image tag — infra is not rolled back, the application artifact is.
+      - name: Check out the repository
+        uses: actions/checkout@v7
+
+      # Reject a malformed tag before we touch anything, so a typo fails here
+      # with a clear message instead of as a confusing `compose pull` error.
+      # The input is passed via env (never interpolated into the script) to
+      # avoid shell injection.
+      - name: Validate the image tag
+        env:
+          IMAGE_TAG: ${{ inputs.image_tag }}
+        run: |
+          # Only the immutable per-commit tags are valid rollback targets. The
+          # moving `latest` is excluded on purpose: rolling back to it would just
+          # redeploy whatever is current, defeating the point.
+          if ! printf '%s' "$IMAGE_TAG" | grep -Eq '^sha-[0-9a-f]{7,40}$'; then
+            echo "::error::'$IMAGE_TAG' is not a valid rollback tag (expected sha-<commit>, e.g. sha-abc1234)."
+            exit 1
+          fi
+
+      # Confirm the image for this tag actually exists in GHCR before going near
+      # the server, so we never roll the stack onto a missing artifact.
+      - name: Check the image exists in GHCR
+        env:
+          GHCR_USER: ${{ github.actor }}
+          GHCR_PAT: ${{ secrets.GHCR_PAT }}
+          IMAGE_TAG: ${{ inputs.image_tag }}
+          IMAGE_REPO: ghcr.io/${{ github.repository }}
+        run: |
+          echo "$GHCR_PAT" | docker login ghcr.io -u "$GHCR_USER" --password-stdin
+          for image in backend frontend migrate; do
+            docker manifest inspect "${IMAGE_REPO}-${image}:${IMAGE_TAG}" > /dev/null \
+              || { echo "::error::No ${image} image found for tag '${IMAGE_TAG}' in GHCR."; docker logout ghcr.io; exit 1; }
+          done
+          docker logout ghcr.io
+
+      # Copy the current compose file, Caddyfile and backup script to the server
+      # (strip the infra/ prefix so they land next to the server-side .env).
+      # Third-party actions are pinned by commit SHA (supply-chain hardening),
+      # with the version in a trailer — same as the deploy job.
+      - name: Copy deploy files to the server
+        uses: appleboy/scp-action@ff85246acaad7bdce478db94a363cd2bf7c90345 # v1.0.0
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          source: infra/compose.prod.yml,infra/Caddyfile,infra/backup.sh
+          target: ${{ secrets.DEPLOY_PATH }}
+          strip_components: 1
+
+      # Pull the images for the requested tag and restart the stack. The migrate
+      # service runs `prisma migrate deploy` first; on a rollback that is a no-op
+      # (no pending migrations in an older image), which is why the schema is not
+      # reverted — see the forward-only note at the top. Secrets go through
+      # `envs` (not interpolated into the script); the registry login is dropped
+      # afterwards so no credential lingers on the server.
+      - name: Roll back over SSH
+        uses: appleboy/ssh-action@0ff4204d59e8e51228ff73bce53f80d53301dee2 # v1.2.5
+        env:
+          DEPLOY_PATH: ${{ secrets.DEPLOY_PATH }}
+          GHCR_USER: ${{ github.actor }}
+          GHCR_PAT: ${{ secrets.GHCR_PAT }}
+          IMAGE_TAG: ${{ inputs.image_tag }}
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          envs: DEPLOY_PATH,GHCR_USER,GHCR_PAT,IMAGE_TAG
+          script: |
+            set -eu
+            cd "$DEPLOY_PATH"
+            echo "$GHCR_PAT" | docker login ghcr.io -u "$GHCR_USER" --password-stdin
+            export IMAGE_TAG
+            docker compose -f compose.prod.yml pull
+            docker compose -f compose.prod.yml up -d --remove-orphans
+            docker logout ghcr.io
+            docker image prune -f

@@ -163,6 +163,13 @@ jobs:
       github.event_name == 'push' && github.ref == 'refs/heads/main'
       && vars.DEPLOY_ENABLED == 'true'
     runs-on: ubuntu-latest
+    # Serialise every production mutation: the manual Rollback workflow shares
+    # this group, so a rollback and a merge-triggered deploy can never run at the
+    # same time. cancel-in-progress stays false — an in-flight deploy must finish,
+    # not be interrupted half-way.
+    concurrency:
+      group: production-deploy
+      cancel-in-progress: false
     steps:
       - name: Check out the repository
         uses: actions/checkout@v7

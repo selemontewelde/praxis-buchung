@@ -281,6 +281,26 @@ it is dormant until `DEPLOY_ENABLED` is `true`.
 > migrations to be backward-compatible; a schema change an old release cannot
 > tolerate needs a deliberate forward-fix, not a rollback.
 
+### Uptime monitoring
+
+A scheduled **Uptime** workflow (`.github/workflows/uptime.yml`) probes the public
+health URL every ~5 minutes. On failure it opens a single GitHub issue labelled
+`uptime`; on recovery it closes that issue automatically — so a long outage is one
+issue, not one per tick, and no external account or secret is needed.
+
+Enable it by setting the repo variable `MONITOR_URL` to the public health URL
+(e.g. `https://praxis.example/health`); until then the job is a no-op, like the
+deploy job before `DEPLOY_ENABLED`. Caddy routes `/health` straight to the backend,
+so the probe exercises the full path — edge → backend → database check — not just
+the static site.
+
+> This is a deliberately lightweight, in-repo check. Its limits are real: cron
+> granularity is capped at ~5 minutes, GitHub's scheduler often delays or even
+> skips scheduled runs under load (so real detection time can be worse than 5
+> minutes), and a GitHub runner can only reach the public HTTPS URL. For tighter
+> detection or a real SLA, point a dedicated uptime service (e.g. UptimeRobot,
+> Better Stack) at the same `/health` URL — the backend is already built for it.
+
 ### Email (production)
 
 Locally, [Mailpit](http://localhost:8025) catches all mail — no configuration

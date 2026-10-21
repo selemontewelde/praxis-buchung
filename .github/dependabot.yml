@@ -29,6 +29,12 @@ updates:
       - dependency-name: "@types/node"
         update-types:
           - version-update:semver-major
+      # Hold TypeScript on 6.x: @angular/compiler-cli caps its peer at
+      # ">=4.8.4 <6.1.0", so TypeScript 7 breaks the Angular build until a
+      # future Angular widens that range. Minor/patch within 6.x still flow.
+      - dependency-name: "typescript"
+        update-types:
+          - version-update:semver-major
 
   # GitHub Actions — keeps the SHA-pinned third-party actions in the CI workflow
   # fresh (Dependabot updates both the pin and the version comment).

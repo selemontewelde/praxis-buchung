@@ -33,12 +33,23 @@ async function main(): Promise<void> {
 
   try {
     await prisma.$transaction(async (tx) => {
+      // Rooms first: a service may reference one (roomId FK).
+      for (const room of seed.rooms) {
+        const data = { name: room.name };
+        await tx.room.upsert({
+          where: { id: room.key },
+          create: { id: room.key, ...data },
+          update: data,
+        });
+      }
+
       for (const service of seed.services) {
         const data = {
           name: service.name,
           durationMin: service.durationMin,
           descriptionDe: service.descriptionDe,
           descriptionEn: service.descriptionEn,
+          roomId: service.room ?? null,
         };
         await tx.service.upsert({
           where: { id: service.key },
@@ -111,7 +122,7 @@ async function main(): Promise<void> {
     console.log(
       `Seeded "${practiceConfig.branding.name}": ` +
         `${seed.therapists.length} therapists, ${seed.services.length} services, ` +
-        `${seed.capabilities.length} capabilities, ` +
+        `${seed.rooms.length} rooms, ${seed.capabilities.length} capabilities, ` +
         `${seed.openingHours.length} opening-hour windows, ` +
         `${seed.workingHours.length} working-hour windows.`,
     );

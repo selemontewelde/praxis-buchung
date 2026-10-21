@@ -57,6 +57,7 @@ const validSeed: SeedData = {
       descriptionEn: 'Description',
     },
   ],
+  rooms: [],
   capabilities: [{ therapist: 'anna', service: 'physio' }],
   admin: { email: 'admin@example.com', password: 'dev-only' },
   openingHours: [{ weekday: 'MONDAY', startMin: 480, endMin: 720 }],
@@ -109,6 +110,34 @@ describe('validatePracticeConfig', () => {
       capabilities: [{ therapist: 'ghost', service: 'physio' }],
     };
     expect(() => validatePracticeConfig(makeConfig(seed))).toThrow(/ghost/);
+  });
+
+  it('rejects duplicate room keys', () => {
+    const seed: SeedData = {
+      ...validSeed,
+      rooms: [
+        { key: 'room-a', name: 'Room A' },
+        { key: 'room-a', name: 'Room A (dup)' },
+      ],
+    };
+    expect(() => validatePracticeConfig(makeConfig(seed))).toThrow(/room-a/);
+  });
+
+  it('rejects a service referencing an unknown room', () => {
+    const seed: SeedData = {
+      ...validSeed,
+      services: [{ ...validSeed.services[0], room: 'ghost-room' }],
+    };
+    expect(() => validatePracticeConfig(makeConfig(seed))).toThrow(/ghost-room/);
+  });
+
+  it('accepts a service that references a declared room', () => {
+    const seed: SeedData = {
+      ...validSeed,
+      rooms: [{ key: 'room-a', name: 'Room A' }],
+      services: [{ ...validSeed.services[0], room: 'room-a' }],
+    };
+    expect(() => validatePracticeConfig(makeConfig(seed))).not.toThrow();
   });
 
   it('rejects working hours for an unknown therapist', () => {

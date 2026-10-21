@@ -103,7 +103,23 @@ export const practiceConfig: PracticeConfig = {
         descriptionDe: 'Entspannende Massage zur Lockerung verspannter Muskulatur.',
         descriptionEn: 'Relaxing massage to release tense muscles.',
       },
+      {
+        key: 'mtt',
+        name: 'Medizinische Trainingstherapie',
+        durationMin: 45,
+        descriptionDe:
+          'Gerätegestütztes Training zum Muskelaufbau — findet im Geräteraum statt.',
+        descriptionEn:
+          'Equipment-based training to rebuild strength — held in the equipment room.',
+        // Requires the shared equipment room: both therapists can deliver it, but
+        // only one MTT session can run at a time because they share the room.
+        room: 'geraeteraum',
+      },
     ],
+
+    // Bookable rooms/equipment. A service may require one (see `room` above);
+    // such a service can't be double-booked in that room across therapists.
+    rooms: [{ key: 'geraeteraum', name: 'Geräteraum' }],
 
     // Local dev credentials only — change before any real deployment.
     admin: {
@@ -115,8 +131,10 @@ export const practiceConfig: PracticeConfig = {
       { therapist: 'anna', service: 'physiotherapy' },
       { therapist: 'anna', service: 'manual-therapy' },
       { therapist: 'anna', service: 'lymph-drainage' },
+      { therapist: 'anna', service: 'mtt' },
       { therapist: 'ben', service: 'physiotherapy' },
       { therapist: 'ben', service: 'massage' },
+      { therapist: 'ben', service: 'mtt' },
     ],
 
     // Mon–Fri, 08:00–12:00 and 13:00–18:00.

@@ -107,7 +107,7 @@ export class SlotService {
         : zonedMinutesToUtc(dayAfterTo, 0, timezone);
 
     const therapistIds = activeTherapists.map((t) => t.id);
-    const [appointments, blocks] = await Promise.all([
+    const [appointments, blocks, roomAppointments] = await Promise.all([
       this.prisma.appointment.findMany({
         where: {
           therapistId: { in: therapistIds },
@@ -123,12 +123,33 @@ export class SlotService {
           endAt: { gt: rangeStart },
         },
       }),
+      // If this service needs a room, every BOOKED appointment in that room —
+      // whichever therapist made it — occupies the room and must block the slot.
+      // Rooms have no opening hours of their own; they are simply single-occupancy.
+      service.roomId !== null
+        ? this.prisma.appointment.findMany({
+            where: {
+              roomId: service.roomId,
+              status: 'BOOKED',
+              startAt: { lt: rangeEnd },
+              endAt: { gt: rangeStart },
+            },
+          })
+        : Promise.resolve([]),
     ]);
 
     return activeTherapists.map((therapist) => {
-      const busyForTherapist = [...appointments, ...blocks].filter(
-        (b) => b.therapistId === therapist.id,
-      );
+      const busyForTherapist = [
+        // This therapist's own appointments and blocks...
+        ...[...appointments, ...blocks].filter(
+          (b) => b.therapistId === therapist.id,
+        ),
+        // ...plus every appointment occupying the required room, regardless of
+        // therapist (the room is shared and single-occupancy). Any duplicate of
+        // this therapist's own room appointment is harmless — the engine only
+        // checks for overlap.
+        ...roomAppointments,
+      ];
       const slots: string[] = [];
 
       for (const date of dates) {

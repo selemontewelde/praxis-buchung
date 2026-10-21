@@ -31,11 +31,16 @@ export interface BookingResult {
   endAt: Date;
 }
 
-/** True if the error is the Postgres exclusion-constraint (overlap) violation. */
+/** True if the error is a Postgres exclusion-constraint (overlap) violation. */
 function isOverlapViolation(error: unknown): boolean {
   const text = error instanceof Error ? error.message : String(error);
-  // SQLSTATE 23P01 = exclusion_violation; the constraint name is also distinctive.
-  return text.includes('appointment_no_overlap') || text.includes('23P01');
+  // SQLSTATE 23P01 = exclusion_violation; the constraint names are also
+  // distinctive. Either the therapist or the room overlap guard may fire.
+  return (
+    text.includes('appointment_no_overlap') ||
+    text.includes('appointment_room_no_overlap') ||
+    text.includes('23P01')
+  );
 }
 
 /**
@@ -99,6 +104,9 @@ export class BookingService {
           data: {
             therapistId: input.therapistId,
             serviceId: input.serviceId,
+            // Occupy the service's required room (null when it needs none); the
+            // room overlap constraint then guards against a double-booking.
+            roomId: service.roomId,
             startAt,
             endAt,
             status: 'BOOKED',

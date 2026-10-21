@@ -370,6 +370,7 @@ Significant, hard-to-reverse decisions are recorded as ADRs in
 | [0009](docs/adr/0009-deployment-ghcr-ssh-compose-migrator.md) | Deployment: GHCR images, SSH + Compose, a one-off migrator, Caddy for HTTPS |
 | [0010](docs/adr/0010-staging-production-manual-approval.md) | Separate staging/production environments with a manual approval gate before production |
 | [0011](docs/adr/0011-multi-arch-images-qemu.md) | Multi-arch images (amd64 + arm64) built with QEMU emulation |
+| [0012](docs/adr/0012-rooms-as-second-resource-axis.md) | Rooms/equipment as a second bookable resource axis (a second exclusion constraint) |
 
 ## License
 

@@ -1,0 +1,34 @@
+name: Release
+
+# Publish a GitHub Release with automatically generated notes whenever a SemVer
+# tag is pushed. GitHub builds the notes from every PR merged since the previous
+# release, grouped by label per .github/release.yml. Cutting a release is then just
+# "tag a commit vX.Y.Z and push the tag" — no manual changelog to maintain.
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+# Least privilege: creating a release writes to repo contents (the Releases API);
+# nothing else is needed.
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: Publish the GitHub release
+    runs-on: ubuntu-latest
+    steps:
+      # Create the release for the pushed tag with notes generated from merged PRs.
+      # gh talks to the Releases API directly (GH_REPO names the repo), so there is
+      # no checkout — nothing here reads local git history. --generate-notes builds
+      # the notes server-side per .github/release.yml; --verify-tag guards the
+      # edge case of a tag that was deleted between push and run. The tag name
+      # flows in via env, never interpolated into the command (house no-injection
+      # convention).
+      - name: Create the release with generated notes
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          TAG: ${{ github.ref_name }}
+        run: gh release create "$TAG" --generate-notes --verify-tag

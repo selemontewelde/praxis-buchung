@@ -60,7 +60,7 @@ const validSeed: SeedData = {
   rooms: [],
   qualifications: [],
   capabilities: [{ therapist: 'anna', service: 'physio' }],
-  admin: { email: 'admin@example.com', password: 'dev-only' },
+  users: [{ email: 'admin@example.com', password: 'dev-only', role: 'ADMIN' }],
   openingHours: [{ weekday: 'MONDAY', startMin: 480, endMin: 720 }],
   workingHours: [
     { therapist: 'anna', weekday: 'MONDAY', startMin: 480, endMin: 720 },
@@ -133,6 +133,65 @@ describe('validatePracticeConfig', () => {
       ],
     };
     expect(() => validatePracticeConfig(makeConfig(seed))).toThrow(/mt/);
+  });
+
+  it('rejects duplicate user emails', () => {
+    const seed: SeedData = {
+      ...validSeed,
+      users: [
+        { email: 'a@example.com', password: 'x', role: 'ADMIN' },
+        { email: 'a@example.com', password: 'y', role: 'ADMIN' },
+      ],
+    };
+    expect(() => validatePracticeConfig(makeConfig(seed))).toThrow(
+      /a@example.com/,
+    );
+  });
+
+  it('requires at least one ADMIN user', () => {
+    const seed: SeedData = {
+      ...validSeed,
+      users: [
+        { email: 'anna@example.com', password: 'x', role: 'THERAPIST', therapist: 'anna' },
+      ],
+    };
+    expect(() => validatePracticeConfig(makeConfig(seed))).toThrow(/ADMIN/);
+  });
+
+  it('rejects a THERAPIST user referencing an unknown therapist', () => {
+    const seed: SeedData = {
+      ...validSeed,
+      users: [
+        ...validSeed.users,
+        { email: 'x@example.com', password: 'x', role: 'THERAPIST', therapist: 'ghost' },
+      ],
+    };
+    expect(() => validatePracticeConfig(makeConfig(seed))).toThrow(/ghost/);
+  });
+
+  it('rejects two logins for the same therapist', () => {
+    const seed: SeedData = {
+      ...validSeed,
+      users: [
+        ...validSeed.users,
+        { email: 'anna1@example.com', password: 'x', role: 'THERAPIST', therapist: 'anna' },
+        { email: 'anna2@example.com', password: 'x', role: 'THERAPIST', therapist: 'anna' },
+      ],
+    };
+    expect(() => validatePracticeConfig(makeConfig(seed))).toThrow(
+      /more than one login/,
+    );
+  });
+
+  it('accepts an ADMIN plus a THERAPIST login for a known therapist', () => {
+    const seed: SeedData = {
+      ...validSeed,
+      users: [
+        { email: 'admin@example.com', password: 'x', role: 'ADMIN' },
+        { email: 'anna@example.com', password: 'x', role: 'THERAPIST', therapist: 'anna' },
+      ],
+    };
+    expect(() => validatePracticeConfig(makeConfig(seed))).not.toThrow();
   });
 
   it('rejects a therapist referencing an unknown qualification', () => {

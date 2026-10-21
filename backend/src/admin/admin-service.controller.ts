@@ -7,6 +7,8 @@ import {
   Post,
   UseGuards,
 } from '@nestjs/common';
+import { Roles } from '../auth/roles.decorator.js';
+import { RolesGuard } from '../auth/roles.guard.js';
 import { SessionAuthGuard } from '../auth/session-auth.guard.js';
 import {
   type AdminServiceView,
@@ -14,8 +16,10 @@ import {
 } from './admin-service.service.js';
 import { CreateServiceDto, UpdateServiceDto } from './dto/service.dto.js';
 
+/** Service management — ADMIN only. */
 @Controller('api/admin/services')
-@UseGuards(SessionAuthGuard)
+@UseGuards(SessionAuthGuard, RolesGuard)
+@Roles(['ADMIN'])
 export class AdminServiceController {
   constructor(private readonly services: AdminServiceService) {}
 

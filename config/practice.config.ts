@@ -143,11 +143,24 @@ export const practiceConfig: PracticeConfig = {
       },
     ],
 
-    // Local dev credentials only — change before any real deployment.
-    admin: {
-      email: 'admin@physio-aarau.example',
-      password: 'changeme-dev-only',
-    },
+    // Back-office logins. Passwords are local dev credentials only — change
+    // before any real deployment. The ADMIN manages everything; the THERAPIST
+    // logins see and manage only their own hours, blocks and appointments.
+    users: [
+      { email: 'admin@physio-aarau.example', password: 'changeme-dev-only', role: 'ADMIN' },
+      {
+        email: 'anna@physio-aarau.example',
+        password: 'changeme-dev-only',
+        role: 'THERAPIST',
+        therapist: 'anna',
+      },
+      {
+        email: 'ben@physio-aarau.example',
+        password: 'changeme-dev-only',
+        role: 'THERAPIST',
+        therapist: 'ben',
+      },
+    ],
 
     capabilities: [
       { therapist: 'anna', service: 'physiotherapy' },

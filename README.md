@@ -371,6 +371,7 @@ Significant, hard-to-reverse decisions are recorded as ADRs in
 | [0010](docs/adr/0010-staging-production-manual-approval.md) | Separate staging/production environments with a manual approval gate before production |
 | [0011](docs/adr/0011-multi-arch-images-qemu.md) | Multi-arch images (amd64 + arm64) built with QEMU emulation |
 | [0012](docs/adr/0012-rooms-as-second-resource-axis.md) | Rooms/equipment as a second bookable resource axis (a second exclusion constraint) |
+| [0013](docs/adr/0013-per-therapist-logins-and-roles.md) | Per-therapist logins and role-based authorization (ADMIN / THERAPIST) |
 
 ## License
 

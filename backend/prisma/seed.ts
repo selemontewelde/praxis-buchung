@@ -87,12 +87,15 @@ async function main(): Promise<void> {
         });
       }
 
-      const passwordHash = await hash(seed.admin.password);
-      await tx.adminUser.upsert({
-        where: { email: seed.admin.email },
-        create: { email: seed.admin.email, passwordHash },
-        update: { passwordHash },
-      });
+      for (const user of seed.users) {
+        const passwordHash = await hash(user.password);
+        const therapistId = user.therapist ?? null;
+        await tx.adminUser.upsert({
+          where: { email: user.email },
+          create: { email: user.email, passwordHash, role: user.role, therapistId },
+          update: { passwordHash, role: user.role, therapistId },
+        });
+      }
 
       for (const capability of seed.capabilities) {
         await tx.capability.upsert({

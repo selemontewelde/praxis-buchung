@@ -160,10 +160,20 @@ export interface SeedWorkingHours extends TimeWindow {
   therapist: string;
 }
 
-/** The initial admin login. The password is a local dev credential only. */
-export interface SeedAdmin {
+/** A role a back-office login can hold. */
+export type SeedUserRole = 'ADMIN' | 'THERAPIST';
+
+/**
+ * A back-office login. Passwords are local dev credentials only. An ADMIN manages
+ * everything; a THERAPIST references the therapist (by key) whose own hours,
+ * blocks and appointments they may manage.
+ */
+export interface SeedUser {
   email: string;
   password: string;
+  role: SeedUserRole;
+  /** Required for a THERAPIST (the therapist key); omit for an ADMIN. */
+  therapist?: string;
 }
 
 export interface SeedData {
@@ -174,7 +184,8 @@ export interface SeedData {
   /** Credentials shown on the team page; therapists reference them by key. */
   qualifications: SeedQualification[];
   capabilities: SeedCapability[];
-  admin: SeedAdmin;
+  /** Back-office logins (at least one ADMIN). */
+  users: SeedUser[];
   /** The practice's weekly opening windows (outer boundary for all slots). */
   openingHours: TimeWindow[];
   /** Each therapist's weekly working windows, inside the opening hours. */

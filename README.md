@@ -175,10 +175,11 @@ A practice is launched by editing **one file**: [`config/practice.config.ts`](co
 
 ## End-to-end booking test
 
-A local [Playwright](https://playwright.dev) smoke test (`frontend/e2e/booking.spec.ts`)
+A [Playwright](https://playwright.dev) smoke test (`frontend/e2e/booking.spec.ts`)
 drives the whole booking flow through the real UI and API against the seeded demo
-practice. It runs against the running local stack (it is intentionally not part of
-CI yet):
+practice. CI runs it on every PR via the `E2E` workflow (`.github/workflows/e2e.yml`) —
+informational, so a failure surfaces without blocking the merge. To run it against
+your local stack:
 
 ```bash
 # 1. Start the stack and seed the demo practice (DATABASE_URL from your .env).

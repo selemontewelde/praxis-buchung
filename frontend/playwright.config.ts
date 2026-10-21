@@ -10,7 +10,10 @@ export default defineConfig({
   timeout: 60_000,
   expect: { timeout: 10_000 },
   fullyParallel: false,
-  reporter: 'list',
+  // `list` keeps the console readable; `html` writes a self-contained report to
+  // playwright-report/ that CI uploads as an artifact on failure (open: 'never'
+  // so a local run doesn't try to launch a browser).
+  reporter: [['list'], ['html', { open: 'never' }]],
   use: {
     baseURL,
     trace: 'retain-on-failure',

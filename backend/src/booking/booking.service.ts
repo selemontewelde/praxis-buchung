@@ -140,7 +140,7 @@ export class BookingService {
       });
     } catch (error) {
       this.logger.error(
-        `Failed to send booking confirmation to ${input.patient.email}`,
+        `Failed to send booking confirmation for appointment ${result.id}`,
         error instanceof Error ? error.stack : String(error),
       );
     }

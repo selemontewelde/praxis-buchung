@@ -31,15 +31,25 @@ export interface BookingResult {
   endAt: Date;
 }
 
-/** True if the error is a Postgres exclusion-constraint (overlap) violation. */
-function isOverlapViolation(error: unknown): boolean {
+/**
+ * True if the error means a concurrent booking lost the race for the slot. Two
+ * forms occur: the Postgres exclusion constraint fires cleanly (therapist or room
+ * overlap, SQLSTATE 23P01), or the two transactions *deadlock* while checking the
+ * exclusion constraints and Postgres aborts one (40P01, surfaced by Prisma as
+ * P2034). With two exclusion constraints on the table a deadlock is the more
+ * likely outcome under contention; either way the loser's slot was just taken, so
+ * both map to a 409 — exactly one booking still commits.
+ */
+function isConcurrencyConflict(error: unknown): boolean {
+  const code = (error as { code?: unknown }).code;
   const text = error instanceof Error ? error.message : String(error);
-  // SQLSTATE 23P01 = exclusion_violation; the constraint names are also
-  // distinctive. Either the therapist or the room overlap guard may fire.
   return (
+    code === 'P2034' || // Prisma: write conflict or deadlock, retry-able
     text.includes('appointment_no_overlap') ||
     text.includes('appointment_room_no_overlap') ||
-    text.includes('23P01')
+    text.includes('23P01') || // exclusion_violation
+    text.includes('40P01') || // deadlock_detected
+    text.includes('40001') // serialization_failure
   );
 }
 
@@ -130,7 +140,7 @@ export class BookingService {
         };
       });
     } catch (error) {
-      if (isOverlapViolation(error)) {
+      if (isConcurrencyConflict(error)) {
         throw new ConflictException('The selected slot was just taken');
       }
       throw error;

@@ -152,13 +152,15 @@ export const practiceConfig: PracticeConfig = {
     ],
 
     workingHours: [
-      // Anna: Mon–Wed, full days.
+      // Anna: Mon–Wed, full days. Wednesday afternoon overlaps Ben, so both are
+      // available then — the window where the shared Geräteraum actually matters.
       { therapist: 'anna', weekday: 'MONDAY', startMin: 480, endMin: 720 },
       { therapist: 'anna', weekday: 'MONDAY', startMin: 780, endMin: 1080 },
       { therapist: 'anna', weekday: 'TUESDAY', startMin: 480, endMin: 720 },
       { therapist: 'anna', weekday: 'TUESDAY', startMin: 780, endMin: 1080 },
       { therapist: 'anna', weekday: 'WEDNESDAY', startMin: 480, endMin: 720 },
-      // Ben: Wed–Fri, mornings only.
+      { therapist: 'anna', weekday: 'WEDNESDAY', startMin: 780, endMin: 1080 },
+      // Ben: Wed–Fri. Wednesday afternoon (shared with Anna), then Thu/Fri mornings.
       { therapist: 'ben', weekday: 'WEDNESDAY', startMin: 780, endMin: 1080 },
       { therapist: 'ben', weekday: 'THURSDAY', startMin: 480, endMin: 720 },
       { therapist: 'ben', weekday: 'FRIDAY', startMin: 480, endMin: 720 },

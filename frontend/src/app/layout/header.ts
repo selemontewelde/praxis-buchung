@@ -56,7 +56,7 @@ import { I18nService } from '../i18n/i18n.service';
             [attr.aria-pressed]="i18n.language() === lang"
             (click)="i18n.setLanguage(lang)"
           >
-            {{ lang === 'de' ? i18n.t('lang.de') : i18n.t('lang.en') }}
+            {{ i18n.languageLabel(lang) }}
           </button>
         }
       </div>

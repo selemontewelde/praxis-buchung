@@ -34,10 +34,12 @@ Alternatives rejected:
 ## Consequences
 
 - The language switch is immediate and offline-capable; no network round-trip.
-- Adding a language means adding one dictionary (TypeScript then flags any missing
-  key) — but every bilingual DB field is a `…De`/`…En` column pair, so a *third*
-  language would need a schema change, not just a dictionary. Acceptable: the
-  product targets DE/EN only.
+- Adding a UI language means adding one dictionary (TypeScript then flags any
+  missing key). The UI now ships DE/EN/FR/IT/ES this way (#34). DB-backed content,
+  however, is still a `…De`/`…En` column pair, so a non-DE/EN UI language shows the
+  English content value (German as last resort, via `pick`). Extending *content*
+  to more languages would need a schema change and remains deliberately out of
+  scope; date/time formatting follows the UI language via a central `localeFor`.
 - If the content model ever outgrows two languages or needs rich ICU formatting,
   revisit and move to a dedicated i18n library then.
 - The API sends both language variants of each field, slightly larger payloads in

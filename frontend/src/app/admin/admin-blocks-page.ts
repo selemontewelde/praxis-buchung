@@ -107,10 +107,10 @@ export class AdminBlocksPage {
   }
 
   protected format(iso: string): string {
-    return new Intl.DateTimeFormat(
-      this.i18n.language() === 'de' ? 'de-CH' : 'en-GB',
-      { dateStyle: 'medium', timeStyle: 'short' },
-    ).format(new Date(iso));
+    return new Intl.DateTimeFormat(this.i18n.locale(), {
+      dateStyle: 'medium',
+      timeStyle: 'short',
+    }).format(new Date(iso));
   }
 
   protected async create(): Promise<void> {

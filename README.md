@@ -124,10 +124,12 @@ docker compose up        # builds and starts the whole stack
 Ports are configurable via `.env`. Stop with `docker compose down` (add `-v` to
 also drop the Postgres volume).
 
-> **Upgrading from an older Postgres volume:** the stack runs Postgres 18. A data
-> volume created by an earlier major (e.g. 17) won't start under 18. On a dev
-> machine, reset it with `docker compose down -v` and re-seed; for data worth
-> keeping, dump with the old image first, then restore (see
+> **Upgrading from an older Postgres volume:** the stack runs Postgres 18, which
+> stores its data under `PGDATA=/var/lib/postgresql/data/pgdata` (see
+> `docker-compose.yml`). A volume created by an earlier major (e.g. 17), or one
+> written before that `PGDATA` was set, won't start under 18. On a dev machine,
+> reset it with `docker compose down -v` and re-seed; for data worth keeping,
+> dump with the old image first, then restore (see
 > [Backups & restore](#backups--restore)).
 
 ## Database (Prisma)
@@ -175,10 +177,11 @@ A practice is launched by editing **one file**: [`config/practice.config.ts`](co
 
 ## End-to-end booking test
 
-A local [Playwright](https://playwright.dev) smoke test (`frontend/e2e/booking.spec.ts`)
+A [Playwright](https://playwright.dev) smoke test (`frontend/e2e/booking.spec.ts`)
 drives the whole booking flow through the real UI and API against the seeded demo
-practice. It runs against the running local stack (it is intentionally not part of
-CI yet):
+practice. CI runs it on every PR via the `E2E` workflow (`.github/workflows/e2e.yml`) —
+informational, so a failure surfaces without blocking the merge. To run it against
+your local stack:
 
 ```bash
 # 1. Start the stack and seed the demo practice (DATABASE_URL from your .env).

@@ -1,0 +1,124 @@
+name: E2E
+
+# Informational Playwright booking smoke test against the REAL stack (issue #44):
+# it drives availability -> booking -> confirmation through the Angular UI and the
+# NestJS API, proving the whole thing wires up end to end. It brings up the full
+# docker compose stack, so it is heavier than the unit gate in ci.yml and is kept
+# as a SEPARATE, non-required workflow — a red run here informs, it does not block
+# the merge. Runs on every PR to main and on main itself.
+#
+# First cut favours fidelity over speed: it mirrors the documented local flow
+# (README "End-to-end booking test") exactly, building the dev images each run.
+# Docker layer caching could be added later if the runtime becomes a nuisance.
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+# Cancel a superseded PR run; never cancel on main.
+concurrency:
+  group: e2e-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+permissions:
+  contents: read
+
+jobs:
+  booking-e2e:
+    name: Playwright booking smoke test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v7
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      # Installs workspace deps and runs the backend `postinstall` (prisma
+      # generate), so the host-run migrate/seed below have a generated client.
+      - name: Install dependencies
+        run: npm ci
+
+      # One .env shared by compose (service ports/passwords) and the host-run
+      # Prisma tooling. These are the committed local-dev values, not secrets.
+      - name: Create the local env file
+        run: cp .env.example .env
+
+      # Start the data services first so the schema can be applied before the app
+      # comes up. --wait blocks on each service's healthcheck. On failure, dump
+      # status + logs + the Postgres health probe output so a red run is
+      # diagnosable without a local repro.
+      - name: Start Postgres and Mailpit
+        run: |
+          docker compose up -d --wait postgres mailpit || {
+            echo "::error::Postgres/Mailpit did not become healthy."
+            docker compose ps
+            docker inspect --format '{{json .State.Health}}' praxis-buchung-postgres-1 || true
+            docker compose logs postgres mailpit
+            exit 1
+          }
+
+      # The CI database is fresh (no persisted volume), so unlike the local flow
+      # we migrate explicitly before seeding. prisma.config.ts reads DATABASE_URL
+      # from the environment, so source the .env we just wrote.
+      - name: Apply migrations and seed the demo practice
+        run: |
+          set -a && . ./.env && set +a
+          npm run prisma:migrate:deploy --workspace backend
+          npm run db:seed --workspace backend
+
+      # Build and start the app. --wait blocks on the backend healthcheck; the
+      # frontend has no healthcheck, so the readiness wait below gates on it.
+      - name: Start backend and frontend
+        run: |
+          docker compose up -d --wait backend frontend || {
+            echo "::error::Backend/frontend did not come up healthy."
+            docker compose ps
+            docker compose logs
+            exit 1
+          }
+
+      # The Angular dev server needs a first compile before it serves; poll until
+      # it answers (up to ~5 min) so Playwright never races an unready server.
+      - name: Wait for the frontend dev server
+        run: |
+          echo "Waiting for the Angular dev server on http://localhost:4200 ..."
+          for i in $(seq 1 60); do
+            if curl -fsS -o /dev/null http://localhost:4200; then
+              echo "Frontend is serving (after $((i * 5))s)."
+              exit 0
+            fi
+            sleep 5
+          done
+          echo "::error::Frontend did not become ready within 5 minutes."
+          docker compose logs --tail=80 frontend
+          exit 1
+
+      - name: Install the Playwright browser
+        run: npx playwright install --with-deps chromium
+        working-directory: frontend
+
+      - name: Run the booking E2E test
+        run: npm run e2e --workspace frontend
+
+      # On failure, keep the Playwright report and the retained traces so the red
+      # run is debuggable (the config sets trace: retain-on-failure).
+      - name: Upload the Playwright report on failure
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: playwright-report
+          path: |
+            frontend/playwright-report/
+            frontend/test-results/
+          retention-days: 7
+
+      # Free the stack and its volume; the runner is ephemeral but this keeps the
+      # step self-contained and the teardown explicit.
+      - name: Tear down the stack
+        if: always()
+        run: docker compose down -v

@@ -150,6 +150,16 @@ npm run db:seed --workspace backend                  # seed the demo practice fr
 npm run prisma:studio --workspace backend            # browse data in Prisma Studio
 ```
 
+## Logging
+
+The backend logs with [pino](https://getpino.io) via `nestjs-pino` (structured
+JSON). Each HTTP request gets a correlation id (`x-request-id`, reused from an
+inbound header or generated) that tags every log line of that request and is
+echoed on the response. Personal data (name, email, phone) and secrets (auth
+header, cookies, passwords) are redacted. The format follows `NODE_ENV` — pretty
+in development, raw JSON everywhere else — and the verbosity is set by
+`LOG_LEVEL` (default `info`). See `backend/src/logging/`.
+
 ## Configuration
 
 A practice is launched by editing **one file**: [`config/practice.config.ts`](config/practice.config.ts)

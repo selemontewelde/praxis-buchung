@@ -92,7 +92,7 @@ export class AdminAppointmentService {
       });
     } catch (error) {
       this.logger.error(
-        `Failed to send cancellation confirmation to ${appointment.patientEmail}`,
+        `Failed to send cancellation confirmation for appointment ${appointment.id}`,
         error instanceof Error ? error.stack : String(error),
       );
     }

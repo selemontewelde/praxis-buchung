@@ -8,6 +8,7 @@ import { AdminModule } from './admin/admin.module.js';
 import { AuthModule } from './auth/auth.module.js';
 import { BookingModule } from './booking/booking.module.js';
 import { HealthModule } from './health/health.module.js';
+import { AppLoggerModule } from './logging/logging.module.js';
 import { MailModule } from './mail/mail.module.js';
 import { PrismaModule } from './prisma/prisma.module.js';
 import { PublicModule } from './public/public.module.js';
@@ -16,6 +17,9 @@ import { SlotsModule } from './slots/slots.module.js';
 
 @Module({
   imports: [
+    // Structured JSON logging (pino) + per-request correlation ids. First so it
+    // is available to everything that logs during startup.
+    AppLoggerModule,
     ScheduleModule.forRoot(),
     // Rate limiting. A moderate app-wide default (120 requests/minute per client);
     // sensitive endpoints tighten this with @Throttle (booking, admin login).

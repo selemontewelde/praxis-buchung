@@ -136,6 +136,8 @@ export class BookingService {
         serviceName: service.name,
         therapistName: `${forTherapist.firstName} ${forTherapist.lastName}`,
         startAt: result.startAt,
+        endAt: result.endAt,
+        appointmentId: result.id,
         cancelUrl: cancelUrl(token),
       });
     } catch (error) {

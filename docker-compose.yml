@@ -22,6 +22,10 @@ services:
       interval: 5s
       timeout: 5s
       retries: 10
+      # Grace window for first-boot initdb on a fresh volume: probe failures here
+      # don't count, so the container stays "starting" (not "unhealthy") until
+      # Postgres actually accepts connections. Matters for `compose up --wait`.
+      start_period: 10s
 
   mailpit:
     # Catches all outgoing mail locally. Web UI on 8025, SMTP on 1025 (used from M5).

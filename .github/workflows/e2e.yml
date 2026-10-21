@@ -49,9 +49,18 @@ jobs:
         run: cp .env.example .env
 
       # Start the data services first so the schema can be applied before the app
-      # comes up. --wait blocks on Postgres's healthcheck (Mailpit has none).
+      # comes up. --wait blocks on each service's healthcheck. On failure, dump
+      # status + logs + the Postgres health probe output so a red run is
+      # diagnosable without a local repro.
       - name: Start Postgres and Mailpit
-        run: docker compose up -d --wait postgres mailpit
+        run: |
+          docker compose up -d --wait postgres mailpit || {
+            echo "::error::Postgres/Mailpit did not become healthy."
+            docker compose ps
+            docker inspect --format '{{json .State.Health}}' praxis-buchung-postgres-1 || true
+            docker compose logs postgres mailpit
+            exit 1
+          }
 
       # The CI database is fresh (no persisted volume), so unlike the local flow
       # we migrate explicitly before seeding. prisma.config.ts reads DATABASE_URL
@@ -65,7 +74,13 @@ jobs:
       # Build and start the app. --wait blocks on the backend healthcheck; the
       # frontend has no healthcheck, so the readiness wait below gates on it.
       - name: Start backend and frontend
-        run: docker compose up -d --wait backend frontend
+        run: |
+          docker compose up -d --wait backend frontend || {
+            echo "::error::Backend/frontend did not come up healthy."
+            docker compose ps
+            docker compose logs
+            exit 1
+          }
 
       # The Angular dev server needs a first compile before it serves; poll until
       # it answers (up to ~5 min) so Playwright never races an unready server.

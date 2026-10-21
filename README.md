@@ -265,6 +265,22 @@ Deployment is automated from `main` and configured entirely under `infra/`:
 
 Rationale and trade-offs: [ADR-0009](docs/adr/0009-deployment-ghcr-ssh-compose-migrator.md).
 
+### Rollback
+
+Every deploy publishes immutable `sha-<commit>` images, so a bad release is
+undone by **redeploying the previous one — not by rebuilding old code**. Run the
+**Rollback** workflow (`Actions → Rollback → Run workflow`) with the target
+`image_tag` (e.g. `sha-abc1234`, from the target commit's _Publish images to
+GHCR_ run). It verifies the images exist in GHCR, then repulls that tag and
+restarts the stack over SSH — the same mechanics as the deploy job. Like deploy,
+it is dormant until `DEPLOY_ENABLED` is `true`.
+
+> **Rollback covers application code, not the database schema.** Prisma
+> migrations are forward-only (`prisma migrate deploy` applies pending ones and
+> never reverts), so an older image may run against a newer schema. Design
+> migrations to be backward-compatible; a schema change an old release cannot
+> tolerate needs a deliberate forward-fix, not a rollback.
+
 ### Email (production)
 
 Locally, [Mailpit](http://localhost:8025) catches all mail — no configuration

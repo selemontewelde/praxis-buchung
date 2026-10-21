@@ -103,7 +103,23 @@ export const practiceConfig: PracticeConfig = {
         descriptionDe: 'Entspannende Massage zur Lockerung verspannter Muskulatur.',
         descriptionEn: 'Relaxing massage to release tense muscles.',
       },
+      {
+        key: 'mtt',
+        name: 'Medizinische Trainingstherapie',
+        durationMin: 45,
+        descriptionDe:
+          'Gerätegestütztes Training zum Muskelaufbau — findet im Geräteraum statt.',
+        descriptionEn:
+          'Equipment-based training to rebuild strength — held in the equipment room.',
+        // Requires the shared equipment room: both therapists can deliver it, but
+        // only one MTT session can run at a time because they share the room.
+        room: 'geraeteraum',
+      },
     ],
+
+    // Bookable rooms/equipment. A service may require one (see `room` above);
+    // such a service can't be double-booked in that room across therapists.
+    rooms: [{ key: 'geraeteraum', name: 'Geräteraum' }],
 
     // Local dev credentials only — change before any real deployment.
     admin: {
@@ -115,8 +131,10 @@ export const practiceConfig: PracticeConfig = {
       { therapist: 'anna', service: 'physiotherapy' },
       { therapist: 'anna', service: 'manual-therapy' },
       { therapist: 'anna', service: 'lymph-drainage' },
+      { therapist: 'anna', service: 'mtt' },
       { therapist: 'ben', service: 'physiotherapy' },
       { therapist: 'ben', service: 'massage' },
+      { therapist: 'ben', service: 'mtt' },
     ],
 
     // Mon–Fri, 08:00–12:00 and 13:00–18:00.
@@ -134,13 +152,15 @@ export const practiceConfig: PracticeConfig = {
     ],
 
     workingHours: [
-      // Anna: Mon–Wed, full days.
+      // Anna: Mon–Wed, full days. Wednesday afternoon overlaps Ben, so both are
+      // available then — the window where the shared Geräteraum actually matters.
       { therapist: 'anna', weekday: 'MONDAY', startMin: 480, endMin: 720 },
       { therapist: 'anna', weekday: 'MONDAY', startMin: 780, endMin: 1080 },
       { therapist: 'anna', weekday: 'TUESDAY', startMin: 480, endMin: 720 },
       { therapist: 'anna', weekday: 'TUESDAY', startMin: 780, endMin: 1080 },
       { therapist: 'anna', weekday: 'WEDNESDAY', startMin: 480, endMin: 720 },
-      // Ben: Wed–Fri, mornings only.
+      { therapist: 'anna', weekday: 'WEDNESDAY', startMin: 780, endMin: 1080 },
+      // Ben: Wed–Fri. Wednesday afternoon (shared with Anna), then Thu/Fri mornings.
       { therapist: 'ben', weekday: 'WEDNESDAY', startMin: 780, endMin: 1080 },
       { therapist: 'ben', weekday: 'THURSDAY', startMin: 480, endMin: 720 },
       { therapist: 'ben', weekday: 'FRIDAY', startMin: 480, endMin: 720 },

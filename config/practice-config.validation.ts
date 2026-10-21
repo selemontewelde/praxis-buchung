@@ -91,7 +91,7 @@ export function validatePracticeConfig(config: PracticeConfig): void {
     problems.push(`booking.horizonDays must be positive, got ${horizonDays}`);
   }
 
-  const { therapists, services, capabilities, openingHours, workingHours } =
+  const { therapists, services, rooms, capabilities, openingHours, workingHours } =
     config.seed;
 
   const therapistKeys = new Set<string>();
@@ -108,6 +108,22 @@ export function validatePracticeConfig(config: PracticeConfig): void {
       problems.push(`duplicate service key "${service.key}"`);
     }
     serviceKeys.add(service.key);
+  }
+
+  const roomKeys = new Set<string>();
+  for (const room of rooms) {
+    if (roomKeys.has(room.key)) {
+      problems.push(`duplicate room key "${room.key}"`);
+    }
+    roomKeys.add(room.key);
+  }
+
+  for (const service of services) {
+    if (service.room !== undefined && !roomKeys.has(service.room)) {
+      problems.push(
+        `service "${service.key}" references unknown room "${service.room}"`,
+      );
+    }
   }
 
   for (const capability of capabilities) {

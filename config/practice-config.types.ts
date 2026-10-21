@@ -121,6 +121,19 @@ export interface SeedService {
   /** Public description, shown on the services page. */
   descriptionDe: string;
   descriptionEn: string;
+  /**
+   * Optional room/equipment (by key) this service requires. When set, a slot is
+   * only offered when that room is free as well as the therapist, and the room
+   * cannot be double-booked across therapists.
+   */
+  room?: string;
+}
+
+/** A bookable room or piece of equipment the practice offers. */
+export interface SeedRoom {
+  /** Stable key, used as the room's database id. */
+  key: string;
+  name: string;
 }
 
 /** A therapist (by key) is able to deliver a service (by key). */
@@ -143,6 +156,8 @@ export interface SeedAdmin {
 export interface SeedData {
   therapists: SeedTherapist[];
   services: SeedService[];
+  /** Bookable rooms/equipment; a service may require one (SeedService.room). */
+  rooms: SeedRoom[];
   capabilities: SeedCapability[];
   admin: SeedAdmin;
   /** The practice's weekly opening windows (outer boundary for all slots). */

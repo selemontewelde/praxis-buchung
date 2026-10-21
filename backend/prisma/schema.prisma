@@ -84,10 +84,29 @@ model Service {
   descriptionDe String? // public description shown on the services page (German)
   descriptionEn String? // public description shown on the services page (English)
   active        Boolean  @default(true) // archived services (false) are hidden from the public + booking
+  // Optional room/equipment this service requires. When set, a slot is only
+  // bookable if the room is free as well as the therapist; a removed room sets
+  // this null (the service becomes room-less).
+  roomId        String?
+  room          Room?    @relation(fields: [roomId], references: [id], onDelete: SetNull)
   createdAt     DateTime @default(now()) @db.Timestamptz(3)
   updatedAt     DateTime @updatedAt @db.Timestamptz(3)
 
   capabilities Capability[]
+  appointments Appointment[]
+}
+
+/// A bookable room or piece of equipment: a resource that can hold at most one
+/// appointment at a time, independent of the therapist. A service may require one
+/// (Service.roomId); the appointment then occupies it and no other appointment
+/// may overlap it (enforced by a DB exclusion constraint, like the therapist).
+model Room {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @db.Timestamptz(3)
+
+  services     Service[]
   appointments Appointment[]
 }
 
@@ -156,6 +175,11 @@ model Appointment {
   therapist    Therapist         @relation(fields: [therapistId], references: [id])
   serviceId    String
   service      Service           @relation(fields: [serviceId], references: [id])
+  // The room this appointment occupies, copied from the service at booking time
+  // (null when the service needs no room). A second exclusion constraint keeps a
+  // room from being double-booked across therapists.
+  roomId       String?
+  room         Room?             @relation(fields: [roomId], references: [id], onDelete: Restrict)
   startAt      DateTime          @db.Timestamptz(3) // UTC
   endAt        DateTime          @db.Timestamptz(3) // UTC — derived from the service duration at booking time
   status       AppointmentStatus @default(BOOKED)
@@ -171,6 +195,7 @@ model Appointment {
   consent ConsentRecord?
 
   @@index([therapistId, startAt])
+  @@index([roomId, startAt])
 }
 
 /// Records the patient's data-protection consent for a booking (revDSG): which

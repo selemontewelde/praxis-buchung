@@ -271,6 +271,10 @@ Deployment is automated from `main` and configured entirely under `infra/`:
 Rationale and trade-offs: [ADR-0009](docs/adr/0009-deployment-ghcr-ssh-compose-migrator.md)
 and [ADR-0010](docs/adr/0010-staging-production-manual-approval.md).
 
+For step-by-step operational procedures — going live, shipping and rolling back a
+release, handling a "site is down" alert, restoring a backup, rotating a secret —
+see the [operations runbook](docs/runbook.md).
+
 #### Enabling the environments
 
 The manual approval is a GitHub feature configured outside the workflow, so it has

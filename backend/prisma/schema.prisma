@@ -67,10 +67,11 @@ model Therapist {
   createdAt   DateTime  @default(now()) @db.Timestamptz(3)
   updatedAt   DateTime  @updatedAt @db.Timestamptz(3)
 
-  capabilities Capability[]
-  workingHours WorkingHours[]
-  blocks       Block[]
-  appointments Appointment[]
+  capabilities   Capability[]
+  qualifications TherapistQualification[]
+  workingHours   WorkingHours[]
+  blocks         Block[]
+  appointments   Appointment[]
 }
 
 // --- Offering -----------------------------------------------------------------
@@ -121,6 +122,31 @@ model Capability {
   createdAt   DateTime  @default(now()) @db.Timestamptz(3)
 
   @@id([therapistId, serviceId])
+}
+
+/// A named credential/training a therapist holds (e.g. "Manuelle Therapie").
+/// Descriptive only: shown on the public team page. It deliberately does NOT gate
+/// bookings — the Service↔Therapist Capability stays the direct mapping (ADR-0001).
+model Qualification {
+  id        String   @id @default(cuid())
+  nameDe    String
+  nameEn    String
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @db.Timestamptz(3)
+
+  therapists TherapistQualification[]
+}
+
+/// Therapist↔Qualification, an explicit join (like Capability) so it can carry
+/// its own columns later (e.g. the date the credential was awarded).
+model TherapistQualification {
+  therapistId     String
+  qualificationId String
+  therapist       Therapist     @relation(fields: [therapistId], references: [id], onDelete: Cascade)
+  qualification   Qualification @relation(fields: [qualificationId], references: [id], onDelete: Cascade)
+  createdAt       DateTime      @default(now()) @db.Timestamptz(3)
+
+  @@id([therapistId, qualificationId])
 }
 
 // --- Scheduling ---------------------------------------------------------------

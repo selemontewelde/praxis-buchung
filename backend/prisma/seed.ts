@@ -43,6 +43,18 @@ async function main(): Promise<void> {
         });
       }
 
+      for (const qualification of seed.qualifications) {
+        const data = {
+          nameDe: qualification.nameDe,
+          nameEn: qualification.nameEn,
+        };
+        await tx.qualification.upsert({
+          where: { id: qualification.key },
+          create: { id: qualification.key, ...data },
+          update: data,
+        });
+      }
+
       for (const service of seed.services) {
         const data = {
           name: service.name,
@@ -98,6 +110,21 @@ async function main(): Promise<void> {
         });
       }
 
+      for (const therapist of seed.therapists) {
+        for (const qualificationId of therapist.qualifications ?? []) {
+          await tx.therapistQualification.upsert({
+            where: {
+              therapistId_qualificationId: {
+                therapistId: therapist.key,
+                qualificationId,
+              },
+            },
+            create: { therapistId: therapist.key, qualificationId },
+            update: {},
+          });
+        }
+      }
+
       // Recurring hours are fully replaced from the config (see header).
       await tx.openingHours.deleteMany();
       await tx.openingHours.createMany({
@@ -122,7 +149,8 @@ async function main(): Promise<void> {
     console.log(
       `Seeded "${practiceConfig.branding.name}": ` +
         `${seed.therapists.length} therapists, ${seed.services.length} services, ` +
-        `${seed.rooms.length} rooms, ${seed.capabilities.length} capabilities, ` +
+        `${seed.rooms.length} rooms, ${seed.qualifications.length} qualifications, ` +
+        `${seed.capabilities.length} capabilities, ` +
         `${seed.openingHours.length} opening-hour windows, ` +
         `${seed.workingHours.length} working-hour windows.`,
     );

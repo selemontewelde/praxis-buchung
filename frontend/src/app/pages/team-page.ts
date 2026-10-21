@@ -28,6 +28,13 @@ import { I18nService } from '../i18n/i18n.service';
               }
             </h2>
             <p class="team-role">{{ i18n.pick(member.roleDe, member.roleEn) }}</p>
+            @if (member.qualifications.length > 0) {
+              <ul class="team-quals" [attr.aria-label]="i18n.t('team.qualifications')">
+                @for (q of member.qualifications; track q.nameDe) {
+                  <li class="team-qual">{{ i18n.pick(q.nameDe, q.nameEn) }}</li>
+                }
+              </ul>
+            }
           </li>
         }
       </ul>
@@ -68,6 +75,22 @@ import { I18nService } from '../i18n/i18n.service';
     .team-role {
       margin: 0;
       color: var(--color-muted);
+    }
+    .team-quals {
+      list-style: none;
+      padding: 0;
+      margin: 0.75rem 0 0;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.375rem;
+      justify-content: center;
+    }
+    .team-qual {
+      font-size: 0.78rem;
+      padding: 0.15rem 0.6rem;
+      border-radius: 999px;
+      background: color-mix(in srgb, var(--color-primary) 10%, transparent);
+      color: var(--color-text);
     }
   `,
 })

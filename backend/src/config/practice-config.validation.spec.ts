@@ -58,6 +58,7 @@ const validSeed: SeedData = {
     },
   ],
   rooms: [],
+  qualifications: [],
   capabilities: [{ therapist: 'anna', service: 'physio' }],
   admin: { email: 'admin@example.com', password: 'dev-only' },
   openingHours: [{ weekday: 'MONDAY', startMin: 480, endMin: 720 }],
@@ -121,6 +122,36 @@ describe('validatePracticeConfig', () => {
       ],
     };
     expect(() => validatePracticeConfig(makeConfig(seed))).toThrow(/room-a/);
+  });
+
+  it('rejects duplicate qualification keys', () => {
+    const seed: SeedData = {
+      ...validSeed,
+      qualifications: [
+        { key: 'mt', nameDe: 'Manuelle Therapie', nameEn: 'Manual therapy' },
+        { key: 'mt', nameDe: 'Duplikat', nameEn: 'Duplicate' },
+      ],
+    };
+    expect(() => validatePracticeConfig(makeConfig(seed))).toThrow(/mt/);
+  });
+
+  it('rejects a therapist referencing an unknown qualification', () => {
+    const seed: SeedData = {
+      ...validSeed,
+      therapists: [{ ...validSeed.therapists[0], qualifications: ['ghost-qual'] }],
+    };
+    expect(() => validatePracticeConfig(makeConfig(seed))).toThrow(/ghost-qual/);
+  });
+
+  it('accepts a therapist referencing a declared qualification', () => {
+    const seed: SeedData = {
+      ...validSeed,
+      qualifications: [
+        { key: 'mt', nameDe: 'Manuelle Therapie', nameEn: 'Manual therapy' },
+      ],
+      therapists: [{ ...validSeed.therapists[0], qualifications: ['mt'] }],
+    };
+    expect(() => validatePracticeConfig(makeConfig(seed))).not.toThrow();
   });
 
   it('rejects a service referencing an unknown room', () => {

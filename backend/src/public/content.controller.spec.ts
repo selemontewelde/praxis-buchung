@@ -53,13 +53,22 @@ describe('PublicContentController', () => {
         activeUntil: null,
         createdAt: new Date(),
         updatedAt: new Date(),
+        qualifications: [],
         ...over,
       });
 
       const prisma = {
         therapist: {
           findMany: vi.fn().mockResolvedValue([
-            therapist({ firstName: 'Anna', activeUntil: null }),
+            therapist({
+              firstName: 'Anna',
+              activeUntil: null,
+              // Out of order → the controller sorts by nameDe.
+              qualifications: [
+                { qualification: { nameDe: 'Manuelle Therapie', nameEn: 'Manual' } },
+                { qualification: { nameDe: 'Lymphdrainage', nameEn: 'Lymph' } },
+              ],
+            }),
             // Departed: active range ended in the past → must be excluded.
             therapist({
               firstName: 'Gone',
@@ -77,6 +86,10 @@ describe('PublicContentController', () => {
         roleDe: 'Rolle',
         roleEn: 'Role',
         photoUrl: 'assets/team/x.svg',
+        qualifications: [
+          { nameDe: 'Lymphdrainage', nameEn: 'Lymph' },
+          { nameDe: 'Manuelle Therapie', nameEn: 'Manual' },
+        ],
       });
       expect(result[0]).not.toHaveProperty('activeFrom');
     });

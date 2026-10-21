@@ -11,6 +11,12 @@ export interface PublicService {
   descriptionEn: string | null;
 }
 
+/** A credential shown under a team member. */
+export interface PublicQualification {
+  nameDe: string;
+  nameEn: string;
+}
+
 /** An active team member as served by GET /api/public/team. */
 export interface PublicTeamMember {
   id: string;
@@ -20,6 +26,7 @@ export interface PublicTeamMember {
   roleDe: string | null;
   roleEn: string | null;
   photoUrl: string | null;
+  qualifications: PublicQualification[];
 }
 
 /**

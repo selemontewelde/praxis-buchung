@@ -56,6 +56,7 @@ export const practiceConfig: PracticeConfig = {
         roleEn: 'Owner & physiotherapist',
         photoUrl: 'assets/team/anna.svg',
         activeFrom: '2024-01-01',
+        qualifications: ['manual-therapy-cert', 'lymph-drainage-cert'],
       },
       {
         key: 'ben',
@@ -65,6 +66,7 @@ export const practiceConfig: PracticeConfig = {
         roleEn: 'Physiotherapist',
         photoUrl: 'assets/team/ben.svg',
         activeFrom: '2024-01-01',
+        qualifications: ['sports-physio-cert'],
       },
     ],
 
@@ -120,6 +122,26 @@ export const practiceConfig: PracticeConfig = {
     // Bookable rooms/equipment. A service may require one (see `room` above);
     // such a service can't be double-booked in that room across therapists.
     rooms: [{ key: 'geraeteraum', name: 'Geräteraum' }],
+
+    // Credentials shown on the team page (descriptive; therapists reference these
+    // by key). They do not affect which services a therapist can deliver.
+    qualifications: [
+      {
+        key: 'manual-therapy-cert',
+        nameDe: 'Zertifikat Manuelle Therapie',
+        nameEn: 'Manual Therapy certificate',
+      },
+      {
+        key: 'lymph-drainage-cert',
+        nameDe: 'Ausbildung Lymphdrainage',
+        nameEn: 'Lymph Drainage training',
+      },
+      {
+        key: 'sports-physio-cert',
+        nameDe: 'Sportphysiotherapie',
+        nameEn: 'Sports Physiotherapy',
+      },
+    ],
 
     // Local dev credentials only — change before any real deployment.
     admin: {

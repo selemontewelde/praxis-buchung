@@ -11,6 +11,12 @@ export interface PublicService {
   descriptionEn: string | null;
 }
 
+/** A credential shown under a team member. */
+export interface PublicQualification {
+  nameDe: string;
+  nameEn: string;
+}
+
 /** An active team member as shown on the public team page. */
 export interface PublicTeamMember {
   id: string;
@@ -20,6 +26,7 @@ export interface PublicTeamMember {
   roleDe: string | null;
   roleEn: string | null;
   photoUrl: string | null;
+  qualifications: PublicQualification[];
 }
 
 /**
@@ -51,6 +58,7 @@ export class PublicContentController {
     const now = new Date();
     const therapists = await this.prisma.therapist.findMany({
       orderBy: [{ lastName: 'asc' }, { firstName: 'asc' }],
+      include: { qualifications: { include: { qualification: true } } },
     });
     // Only therapists whose Active range covers now are shown publicly. Filtering
     // in JS (reusing the tested isActive predicate) is deliberate for a
@@ -65,6 +73,12 @@ export class PublicContentController {
         roleDe: therapist.roleDe,
         roleEn: therapist.roleEn,
         photoUrl: therapist.photoUrl,
+        qualifications: therapist.qualifications
+          .map((tq) => ({
+            nameDe: tq.qualification.nameDe,
+            nameEn: tq.qualification.nameEn,
+          }))
+          .sort((a, b) => a.nameDe.localeCompare(b.nameDe)),
       }));
   }
 }

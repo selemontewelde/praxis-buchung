@@ -110,6 +110,19 @@ export interface SeedTherapist {
   photoUrl: string;
   /** Start of the Active range as an ISO date string (stored UTC). */
   activeFrom: string;
+  /**
+   * Qualifications this therapist holds, by key. Descriptive only (shown on the
+   * team page) — they do not affect which services the therapist can deliver.
+   */
+  qualifications?: string[];
+}
+
+/** A named credential/training shown on the public team page. */
+export interface SeedQualification {
+  /** Stable key, used as the qualification's database id. */
+  key: string;
+  nameDe: string;
+  nameEn: string;
 }
 
 export interface SeedService {
@@ -158,6 +171,8 @@ export interface SeedData {
   services: SeedService[];
   /** Bookable rooms/equipment; a service may require one (SeedService.room). */
   rooms: SeedRoom[];
+  /** Credentials shown on the team page; therapists reference them by key. */
+  qualifications: SeedQualification[];
   capabilities: SeedCapability[];
   admin: SeedAdmin;
   /** The practice's weekly opening windows (outer boundary for all slots). */

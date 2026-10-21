@@ -152,72 +152,40 @@ jobs:
           cache-from: type=gha,scope=${{ matrix.image.name }}
           cache-to: type=gha,mode=max,scope=${{ matrix.image.name }}
 
-  # Deploy to the production server over SSH after the images are published.
-  # Dormant until the server exists: it only runs when the repo variable
-  # DEPLOY_ENABLED is "true" (set it once the SSH_* / DOMAIN secrets are in
-  # place), so main stays green in the meantime.
-  deploy:
-    name: Deploy to server
+  # Deploy after the images are published: staging automatically, then production
+  # behind a manual approval. Both jobs call the reusable deploy.yml (one
+  # definition, invoked once per environment) so the two deploys can never drift
+  # apart. The whole chain is dormant until the DEPLOY_ENABLED repo variable is
+  # "true", so main stays green long before a server exists.
+  #
+  # The approval itself is NOT in this file: it is a protection rule on the
+  # `production` GitHub Environment (Settings -> Environments -> production ->
+  # Required reviewers). Binding deploy-production to that environment makes GitHub
+  # pause it until a reviewer approves in the Actions UI.
+  deploy-staging:
+    name: Deploy to staging
     needs: publish
     if: >-
       github.event_name == 'push' && github.ref == 'refs/heads/main'
       && vars.DEPLOY_ENABLED == 'true'
-    runs-on: ubuntu-latest
-    # Serialise every production mutation: the manual Rollback workflow shares
-    # this group, so a rollback and a merge-triggered deploy can never run at the
-    # same time. cancel-in-progress stays false — an in-flight deploy must finish,
-    # not be interrupted half-way.
-    concurrency:
-      group: production-deploy
-      cancel-in-progress: false
-    steps:
-      - name: Check out the repository
-        uses: actions/checkout@v7
+    uses: ./.github/workflows/deploy.yml
+    with:
+      environment: staging
+    # Hand the repo/environment secrets (SSH_*, DEPLOY_PATH, GHCR_PAT) to the
+    # reusable workflow; the ones scoped to `staging` resolve there through its
+    # `environment:` binding, so staging points at its own server.
+    secrets: inherit
 
-      # The short SHA matches the `sha-<commit>` image tag metadata-action pushes,
-      # so the deploy runs the exact image built from this commit (not a moving
-      # `latest` that a concurrent merge could change under it).
-      - name: Compute the image tag
-        id: tag
-        run: echo "image_tag=sha-$(git rev-parse --short=7 HEAD)" >> "$GITHUB_OUTPUT"
-
-      # Copy the compose file and Caddyfile to the server (strip the infra/
-      # prefix so they land next to the server-side .env). Third-party actions are
-      # pinned by commit SHA (supply-chain hardening), with the version in a trailer.
-      - name: Copy deploy files to the server
-        uses: appleboy/scp-action@ff85246acaad7bdce478db94a363cd2bf7c90345 # v1.0.0
-        with:
-          host: ${{ secrets.SSH_HOST }}
-          username: ${{ secrets.SSH_USER }}
-          key: ${{ secrets.SSH_KEY }}
-          source: infra/compose.prod.yml,infra/Caddyfile,infra/backup.sh
-          target: ${{ secrets.DEPLOY_PATH }}
-          strip_components: 1
-
-      # Pull the images for this commit and (re)start the stack. The migrate
-      # service runs `prisma migrate deploy` before the backend starts (compose
-      # service_completed_successfully ordering), and Caddy fetches/renews the
-      # TLS certificate automatically for ${DOMAIN}. Secrets are passed through
-      # `envs` (not interpolated into the script) and the registry login is
-      # dropped again afterwards so no credential lingers on the server.
-      - name: Deploy over SSH
-        uses: appleboy/ssh-action@0ff4204d59e8e51228ff73bce53f80d53301dee2 # v1.2.5
-        env:
-          DEPLOY_PATH: ${{ secrets.DEPLOY_PATH }}
-          GHCR_USER: ${{ github.actor }}
-          GHCR_PAT: ${{ secrets.GHCR_PAT }}
-          IMAGE_TAG: ${{ steps.tag.outputs.image_tag }}
-        with:
-          host: ${{ secrets.SSH_HOST }}
-          username: ${{ secrets.SSH_USER }}
-          key: ${{ secrets.SSH_KEY }}
-          envs: DEPLOY_PATH,GHCR_USER,GHCR_PAT,IMAGE_TAG
-          script: |
-            set -eu
-            cd "$DEPLOY_PATH"
-            echo "$GHCR_PAT" | docker login ghcr.io -u "$GHCR_USER" --password-stdin
-            export IMAGE_TAG
-            docker compose -f compose.prod.yml pull
-            docker compose -f compose.prod.yml up -d --remove-orphans
-            docker logout ghcr.io
-            docker image prune -f
+  deploy-production:
+    name: Deploy to production
+    # Only promote what already runs on staging: production waits for a green
+    # staging deploy, and then the `production` environment's required reviewers
+    # pause this job until a human approves.
+    needs: deploy-staging
+    if: >-
+      github.event_name == 'push' && github.ref == 'refs/heads/main'
+      && vars.DEPLOY_ENABLED == 'true'
+    uses: ./.github/workflows/deploy.yml
+    with:
+      environment: production
+    secrets: inherit

@@ -1,0 +1,92 @@
+name: Deploy
+
+# Reusable deploy workflow: pull this commit's immutable images and (re)start the
+# stack on one target server over SSH. ci.yml calls it once per environment —
+# staging first, then production — so a single definition serves both and the two
+# deploys can never drift apart.
+#
+# The manual-approval gate is NOT in this file. It lives on the GitHub Environment
+# (Settings -> Environments -> production -> Required reviewers): binding the job
+# to `environment: production` makes GitHub pause the run until a reviewer approves
+# in the Actions UI. This workflow only names the environment; GitHub enforces it.
+on:
+  workflow_call:
+    inputs:
+      environment:
+        description: 'Target environment — staging or production.'
+        required: true
+        type: string
+
+# Least privilege: the deploy only needs to read the repo (to check out the infra
+# files it copies to the server). No package or write scopes.
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    name: Deploy to ${{ inputs.environment }}
+    runs-on: ubuntu-latest
+    # Binding the job to a GitHub Environment is what activates that environment's
+    # protection rules (required reviewers = the manual approval), its scoped
+    # secrets (each environment points SSH_* / DEPLOY_PATH at its own server), and
+    # the deployment record shown in the repo's Environments view.
+    environment: ${{ inputs.environment }}
+    # Serialise production mutations: production shares the `production-deploy`
+    # group with the manual Rollback workflow, so a prod deploy and a rollback can
+    # never run at once. staging gets its own group so it never blocks production.
+    # cancel-in-progress stays false — an in-flight deploy must finish, not be cut.
+    concurrency:
+      group: ${{ inputs.environment == 'production' && 'production-deploy' || format('deploy-{0}', inputs.environment) }}
+      cancel-in-progress: false
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v7
+
+      # The short SHA matches the `sha-<commit>` image tag metadata-action pushes,
+      # so the deploy runs the exact image built from this commit (not a moving
+      # `latest` that a concurrent merge could change under it).
+      - name: Compute the image tag
+        id: tag
+        run: echo "image_tag=sha-$(git rev-parse --short=7 HEAD)" >> "$GITHUB_OUTPUT"
+
+      # Copy the compose file, Caddyfile and backup script to the server (strip the
+      # infra/ prefix so they land next to the server-side .env). Third-party
+      # actions are pinned by commit SHA (supply-chain hardening), version in a
+      # trailer. host/path come from the environment's scoped secrets.
+      - name: Copy deploy files to the server
+        uses: appleboy/scp-action@ff85246acaad7bdce478db94a363cd2bf7c90345 # v1.0.0
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          source: infra/compose.prod.yml,infra/Caddyfile,infra/backup.sh
+          target: ${{ secrets.DEPLOY_PATH }}
+          strip_components: 1
+
+      # Pull the images for this commit and (re)start the stack. The migrate
+      # service runs `prisma migrate deploy` before the backend starts (compose
+      # service_completed_successfully ordering), and Caddy fetches/renews the TLS
+      # certificate automatically for ${DOMAIN}. Secrets are passed through `envs`
+      # (not interpolated into the script) and the registry login is dropped again
+      # afterwards so no credential lingers on the server.
+      - name: Deploy over SSH
+        uses: appleboy/ssh-action@0ff4204d59e8e51228ff73bce53f80d53301dee2 # v1.2.5
+        env:
+          DEPLOY_PATH: ${{ secrets.DEPLOY_PATH }}
+          GHCR_USER: ${{ github.actor }}
+          GHCR_PAT: ${{ secrets.GHCR_PAT }}
+          IMAGE_TAG: ${{ steps.tag.outputs.image_tag }}
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          envs: DEPLOY_PATH,GHCR_USER,GHCR_PAT,IMAGE_TAG
+          script: |
+            set -eu
+            cd "$DEPLOY_PATH"
+            echo "$GHCR_PAT" | docker login ghcr.io -u "$GHCR_USER" --password-stdin
+            export IMAGE_TAG
+            docker compose -f compose.prod.yml pull
+            docker compose -f compose.prod.yml up -d --remove-orphans
+            docker logout ghcr.io
+            docker image prune -f

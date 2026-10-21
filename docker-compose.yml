@@ -12,6 +12,12 @@ services:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: ${POSTGRES_DB}
+      # Postgres 18+ moved its default data dir to a versioned path
+      # (/var/lib/postgresql/18/docker) and refuses to start when the volume is
+      # mounted at the legacy /var/lib/postgresql/data. Pin PGDATA to a
+      # subdirectory of our mount instead: an explicit, version-independent data
+      # path that survives future major bumps without the mount moving.
+      PGDATA: /var/lib/postgresql/data/pgdata
     ports:
       - '${POSTGRES_PORT:-5432}:5432'
     volumes:

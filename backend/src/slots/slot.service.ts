@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { practiceConfig } from '@praxis-buchung/config';
 import { DateTime } from 'luxon';
+import { WEEKDAYS } from '../common/weekdays.js';
 import { isActive } from '../public/active-range.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { applyBuffer, withinBookingWindow } from './policies.js';
@@ -25,16 +26,6 @@ export interface TherapistSlots {
   /** Bookable slot start instants, as UTC ISO strings. */
   slots: string[];
 }
-
-const WEEKDAYS = [
-  'MONDAY',
-  'TUESDAY',
-  'WEDNESDAY',
-  'THURSDAY',
-  'FRIDAY',
-  'SATURDAY',
-  'SUNDAY',
-] as const;
 
 /**
  * Computes bookable slots from the database, wiring the pure slot engine

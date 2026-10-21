@@ -6,6 +6,8 @@ import { AdminBlockController } from './admin-block.controller.js';
 import { AdminBlockService } from './admin-block.service.js';
 import { AdminHoursController } from './admin-hours.controller.js';
 import { AdminHoursService } from './admin-hours.service.js';
+import { AdminReassignController } from './admin-reassign.controller.js';
+import { AdminReassignService } from './admin-reassign.service.js';
 import { AdminServiceController } from './admin-service.controller.js';
 import { AdminServiceService } from './admin-service.service.js';
 import { AdminTherapistController } from './admin-therapist.controller.js';
@@ -20,10 +22,12 @@ import { AdminTherapistService } from './admin-therapist.service.js';
     AdminBlockController,
     AdminServiceController,
     AdminAppointmentController,
+    AdminReassignController,
   ],
   providers: [
     AdminTherapistService,
     AdminHoursService,
+    AdminReassignService,
     AdminBlockService,
     AdminServiceService,
     AdminAppointmentService,

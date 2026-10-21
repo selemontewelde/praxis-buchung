@@ -8,6 +8,8 @@ import {
   Put,
   UseGuards,
 } from '@nestjs/common';
+import { Roles } from '../auth/roles.decorator.js';
+import { RolesGuard } from '../auth/roles.guard.js';
 import { SessionAuthGuard } from '../auth/session-auth.guard.js';
 import {
   type AdminTherapistView,
@@ -19,9 +21,10 @@ import {
   UpdateTherapistDto,
 } from './dto/therapist.dto.js';
 
-/** Admin therapist management — requires a valid admin session. */
+/** Team management — ADMIN only (a therapist cannot manage the team). */
 @Controller('api/admin/therapists')
-@UseGuards(SessionAuthGuard)
+@UseGuards(SessionAuthGuard, RolesGuard)
+@Roles(['ADMIN'])
 export class AdminTherapistController {
   constructor(private readonly therapists: AdminTherapistService) {}
 

@@ -60,12 +60,23 @@ export class AdminAppointmentService {
     }));
   }
 
-  async cancel(id: string, now = new Date()): Promise<void> {
+  async cancel(
+    id: string,
+    now = new Date(),
+    restrictToTherapistId?: string,
+  ): Promise<void> {
     const appointment = await this.prisma.appointment.findUnique({
       where: { id },
       include: { service: true, therapist: true },
     });
-    if (appointment === null) {
+    // When restricted (a THERAPIST user), another therapist's appointment is
+    // reported as not found — it is not theirs to cancel and its existence isn't
+    // revealed.
+    if (
+      appointment === null ||
+      (restrictToTherapistId !== undefined &&
+        appointment.therapistId !== restrictToTherapistId)
+    ) {
       throw new NotFoundException(`Unknown appointment: ${id}`);
     }
     if (appointment.status === 'CANCELLED') {

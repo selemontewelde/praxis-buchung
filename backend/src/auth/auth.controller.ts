@@ -59,7 +59,16 @@ export class AuthController {
 
   @Get('me')
   @UseGuards(SessionAuthGuard)
-  me(@Req() req: RequestWithAdmin): { email: string } {
-    return { email: req.admin?.email ?? '' };
+  me(@Req() req: RequestWithAdmin): {
+    email: string;
+    role: 'ADMIN' | 'THERAPIST';
+    therapistId: string | null;
+  } {
+    const admin = req.admin;
+    return {
+      email: admin?.email ?? '',
+      role: admin?.role ?? 'ADMIN',
+      therapistId: admin?.therapistId ?? null,
+    };
   }
 }

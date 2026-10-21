@@ -25,6 +25,9 @@ export interface SessionResult {
 export interface AuthenticatedAdmin {
   id: string;
   email: string;
+  role: 'ADMIN' | 'THERAPIST';
+  /** The therapist this login manages (set for a THERAPIST, null for an ADMIN). */
+  therapistId: string | null;
 }
 
 /**
@@ -75,6 +78,11 @@ export class AuthService {
       await this.prisma.session.deleteMany({ where: { token: hashed } });
       return null;
     }
-    return { id: session.adminUser.id, email: session.adminUser.email };
+    return {
+      id: session.adminUser.id,
+      email: session.adminUser.email,
+      role: session.adminUser.role,
+      therapistId: session.adminUser.therapistId,
+    };
   }
 }

@@ -49,6 +49,14 @@ enum BlockReason {
   OTHER
 }
 
+/// Role of a back-office user. ADMIN (reception/owner) manages everything; a
+/// THERAPIST signs in to see and manage only their own hours, blocks and
+/// appointments (linked via AdminUser.therapistId).
+enum UserRole {
+  ADMIN
+  THERAPIST
+}
+
 // --- People -------------------------------------------------------------------
 
 /// A member of the practice's team who delivers services. Never hard-deleted:
@@ -72,6 +80,7 @@ model Therapist {
   workingHours   WorkingHours[]
   blocks         Block[]
   appointments   Appointment[]
+  user           AdminUser?
 }
 
 // --- Offering -----------------------------------------------------------------
@@ -242,6 +251,11 @@ model AdminUser {
   id           String   @id @default(cuid())
   email        String   @unique
   passwordHash String
+  role         UserRole @default(ADMIN)
+  // Set for a THERAPIST user: the therapist whose hours/blocks/appointments they
+  // may manage. Null for an ADMIN. One login per therapist (@unique).
+  therapistId  String?    @unique
+  therapist    Therapist? @relation(fields: [therapistId], references: [id], onDelete: Restrict)
   createdAt    DateTime @default(now()) @db.Timestamptz(3)
   updatedAt    DateTime @updatedAt @db.Timestamptz(3)
 

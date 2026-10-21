@@ -97,6 +97,7 @@ export function validatePracticeConfig(config: PracticeConfig): void {
     rooms,
     qualifications,
     capabilities,
+    users,
     openingHours,
     workingHours,
   } = config.seed;
@@ -162,6 +163,39 @@ export function validatePracticeConfig(config: PracticeConfig): void {
         `capability references unknown service "${capability.service}"`,
       );
     }
+  }
+
+  const userEmails = new Set<string>();
+  const therapistLogins = new Set<string>();
+  let adminCount = 0;
+  for (const user of users) {
+    if (userEmails.has(user.email)) {
+      problems.push(`duplicate user email "${user.email}"`);
+    }
+    userEmails.add(user.email);
+    if (user.role === 'ADMIN') {
+      adminCount += 1;
+    } else {
+      // THERAPIST: must link a known therapist, and at most one login per therapist.
+      if (user.therapist === undefined) {
+        problems.push(`therapist user "${user.email}" is missing a therapist`);
+      } else {
+        if (!therapistKeys.has(user.therapist)) {
+          problems.push(
+            `user "${user.email}" references unknown therapist "${user.therapist}"`,
+          );
+        }
+        if (therapistLogins.has(user.therapist)) {
+          problems.push(
+            `therapist "${user.therapist}" has more than one login`,
+          );
+        }
+        therapistLogins.add(user.therapist);
+      }
+    }
+  }
+  if (adminCount === 0) {
+    problems.push('at least one ADMIN user is required');
   }
 
   const validate = (window: TimeWindow, label: string): boolean => {

@@ -1,4 +1,6 @@
 import { Body, Controller, Param, Post, UseGuards } from '@nestjs/common';
+import { Roles } from '../auth/roles.decorator.js';
+import { RolesGuard } from '../auth/roles.guard.js';
 import { SessionAuthGuard } from '../auth/session-auth.guard.js';
 import {
   type ReassignApplyResult,
@@ -13,7 +15,8 @@ import { ReassignApplyDto, ReassignPreviewDto } from './dto/reassign.dto.js';
  * decided assignments. Requires a valid admin session.
  */
 @Controller('api/admin/therapists')
-@UseGuards(SessionAuthGuard)
+@UseGuards(SessionAuthGuard, RolesGuard)
+@Roles(['ADMIN'])
 export class AdminReassignController {
   constructor(private readonly reassign: AdminReassignService) {}
 

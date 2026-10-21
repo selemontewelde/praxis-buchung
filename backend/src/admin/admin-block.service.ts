@@ -21,10 +21,22 @@ export interface AdminBlockView {
 export class AdminBlockService {
   constructor(private readonly prisma: PrismaService) {}
 
-  /** Upcoming and ongoing blocks (end in the future), soonest first. */
-  async list(now = new Date()): Promise<AdminBlockView[]> {
+  /**
+   * Upcoming and ongoing blocks (end in the future), soonest first. A therapist
+   * filter restricts the list to one therapist (used to scope a THERAPIST user to
+   * their own); undefined returns all.
+   */
+  async list(
+    filterTherapistId?: string,
+    now = new Date(),
+  ): Promise<AdminBlockView[]> {
     const blocks = await this.prisma.block.findMany({
-      where: { endAt: { gt: now } },
+      where: {
+        endAt: { gt: now },
+        ...(filterTherapistId !== undefined
+          ? { therapistId: filterTherapistId }
+          : {}),
+      },
       include: { therapist: true },
       orderBy: { startAt: 'asc' },
     });
@@ -63,8 +75,20 @@ export class AdminBlockService {
     return { id: block.id };
   }
 
-  async remove(id: string): Promise<void> {
-    const { count } = await this.prisma.block.deleteMany({ where: { id } });
+  /**
+   * Delete a block. When `restrictToTherapistId` is set (a THERAPIST user), only
+   * their own block is deletable; another's is reported as not found, which also
+   * avoids revealing that it exists.
+   */
+  async remove(id: string, restrictToTherapistId?: string): Promise<void> {
+    const { count } = await this.prisma.block.deleteMany({
+      where: {
+        id,
+        ...(restrictToTherapistId !== undefined
+          ? { therapistId: restrictToTherapistId }
+          : {}),
+      },
+    });
     if (count === 0) {
       throw new NotFoundException(`Unknown block: ${id}`);
     }

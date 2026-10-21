@@ -1,0 +1,81 @@
+name: Uptime
+
+# Periodically probe the public health endpoint and raise a GitHub issue when the
+# site is down, closing it again automatically on recovery. This is a lightweight,
+# in-repo uptime check: fine for a single practice and visible right here in the
+# repo, with no external account. Its limits are honest ones — cron is capped at
+# ~5 min granularity, and the runner can only reach the PUBLIC HTTPS URL (never a
+# host behind the firewall). For a real SLA, point a dedicated uptime service at
+# the same URL instead (see the README "Uptime monitoring" section).
+on:
+  schedule:
+    # Every 5 minutes is the finest cron granularity GitHub Actions allows.
+    - cron: '*/5 * * * *'
+  # Manual run to test the probe + alert path once a URL is configured.
+  workflow_dispatch:
+
+# Never let two probes overlap (a slow run must not race the next tick); an
+# in-flight run finishes rather than being cancelled.
+concurrency:
+  group: uptime
+  cancel-in-progress: false
+
+# Least privilege: read the repo, and write issues to open/close the alert.
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  probe:
+    name: Probe the public health endpoint
+    # Dormant until the public health URL is configured (repo variable
+    # MONITOR_URL, e.g. https://praxis.example/health). Until the site is live
+    # there is nothing to probe, so the job is a no-op — the same dormancy idea
+    # as the deploy job's DEPLOY_ENABLED gate.
+    if: vars.MONITOR_URL != ''
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+      MONITOR_URL: ${{ vars.MONITOR_URL }}
+      ALERT_LABEL: uptime
+    steps:
+      # -f turns any non-2xx/3xx response into a failure; --retry rides out a
+      # single dropped request so one transient blip doesn't open an issue.
+      - name: Probe the health endpoint
+        id: probe
+        run: |
+          if curl -fsS --max-time 10 --retry 2 --retry-delay 5 "$MONITOR_URL" > /dev/null; then
+            echo "up=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "up=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      # Make sure the alert label exists before we filter on it. --force is
+      # idempotent: it creates the label or updates it, so reruns are safe.
+      - name: Ensure the alert label exists
+        run: gh label create "$ALERT_LABEL" --color B60205 --description "Automated uptime alert" --force
+
+      # Down: open an alert, but only if one isn't already open. Deduplicating on
+      # the label keeps a long outage to a single issue instead of one every tick.
+      - name: Open an alert if down
+        if: steps.probe.outputs.up == 'false'
+        run: |
+          existing=$(gh issue list --state open --label "$ALERT_LABEL" --json number --jq '.[0].number // empty')
+          if [ -z "$existing" ]; then
+            gh issue create \
+              --title "🔴 Uptime alert: the site is down" \
+              --label "$ALERT_LABEL" \
+              --body "An automated probe of ${MONITOR_URL} failed at $(date -u '+%Y-%m-%d %H:%M:%SZ').
+
+          This issue was opened by the Uptime workflow and will close itself when the next probe succeeds."
+          fi
+
+      # Up: close any open alert, so the issue list reflects reality and the team
+      # gets a recovery note with the duration visible in the issue timeline.
+      - name: Resolve the alert if back up
+        if: steps.probe.outputs.up == 'true'
+        run: |
+          for n in $(gh issue list --state open --label "$ALERT_LABEL" --json number --jq '.[].number'); do
+            gh issue close "$n" --comment "✅ Recovered: a probe of ${MONITOR_URL} succeeded at $(date -u '+%Y-%m-%d %H:%M:%SZ')."
+          done

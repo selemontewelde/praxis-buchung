@@ -253,7 +253,9 @@ To inspect a dump without restoring: `gunzip -c backups/backup-<timestamp>.sql.g
 Deployment is automated from `main` and configured entirely under `infra/`:
 
 - **Images** — on merge to `main`, CI builds and pushes the `backend`, `frontend`
-  and `migrate` images to GHCR, tagged `latest` and `sha-<commit>`.
+  and `migrate` images to GHCR, tagged `latest` and `sha-<commit>`. Each image is
+  **multi-arch** (`linux/amd64` + `linux/arm64`, one manifest list), so it runs on
+  both x86 and ARM hosts; see [ADR-0011](docs/adr/0011-multi-arch-images-qemu.md).
 - **Two environments, one manual gate** — after the images are published, the
   reusable `deploy.yml` workflow deploys to **staging automatically**, then to
   **production only after a manual approval**. Both calls share one definition, so
@@ -363,6 +365,7 @@ Significant, hard-to-reverse decisions are recorded as ADRs in
 | [0008](docs/adr/0008-admin-auth-server-side-sessions.md) | Admin auth via server-side sessions in an HTTP-only cookie (not JWT) |
 | [0009](docs/adr/0009-deployment-ghcr-ssh-compose-migrator.md) | Deployment: GHCR images, SSH + Compose, a one-off migrator, Caddy for HTTPS |
 | [0010](docs/adr/0010-staging-production-manual-approval.md) | Separate staging/production environments with a manual approval gate before production |
+| [0011](docs/adr/0011-multi-arch-images-qemu.md) | Multi-arch images (amd64 + arm64) built with QEMU emulation |
 
 ## License
 

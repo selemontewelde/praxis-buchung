@@ -114,13 +114,10 @@ export class CancellationPage {
   }
 
   protected formatDateTime(iso: string): string {
-    return new Intl.DateTimeFormat(
-      this.i18n.language() === 'de' ? 'de-CH' : 'en-GB',
-      {
-        timeZone: this.practice.timezone(),
-        dateStyle: 'full',
-        timeStyle: 'short',
-      },
-    ).format(new Date(iso));
+    return new Intl.DateTimeFormat(this.i18n.locale(), {
+      timeZone: this.practice.timezone(),
+      dateStyle: 'full',
+      timeStyle: 'short',
+    }).format(new Date(iso));
   }
 }

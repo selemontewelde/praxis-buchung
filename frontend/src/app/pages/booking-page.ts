@@ -166,7 +166,7 @@ export class BookingPage {
   }
 
   private locale(): string {
-    return this.i18n.language() === 'de' ? 'de-CH' : 'en-GB';
+    return this.i18n.locale();
   }
 
   private today(): string {

@@ -55,4 +55,45 @@ describe('I18nService', () => {
     TestBed.configureTestingModule({});
     expect(TestBed.inject(I18nService).language()).toBe('en');
   });
+
+  it('supports additional languages beyond DE/EN', () => {
+    const i18n = TestBed.inject(I18nService);
+    i18n.setLanguage('fr');
+    expect(i18n.language()).toBe('fr');
+    expect(i18n.t('nav.home')).toBe('Accueil');
+    i18n.setLanguage('it');
+    expect(i18n.t('nav.home')).toBe('Home');
+    i18n.setLanguage('es');
+    expect(i18n.t('nav.home')).toBe('Inicio');
+  });
+
+  it('shows the English DB value for a non-German UI language', () => {
+    const i18n = TestBed.inject(I18nService);
+    i18n.setLanguage('fr');
+    // DB content is only DE/EN, so a third language falls back to English.
+    expect(i18n.pick('DE', 'EN')).toBe('EN');
+  });
+
+  it('remembers any supported language across instances', () => {
+    TestBed.inject(I18nService).setLanguage('es');
+    TestBed.resetTestingModule();
+    TestBed.configureTestingModule({});
+    expect(TestBed.inject(I18nService).language()).toBe('es');
+  });
+
+  it('falls back to the default for an unknown stored language', () => {
+    try {
+      localStorage.setItem('praxis.language', 'xx');
+    } catch {
+      // ignore
+    }
+    expect(TestBed.inject(I18nService).language()).toBe('de');
+  });
+
+  it('exposes each language endonym for the switcher', () => {
+    const i18n = TestBed.inject(I18nService);
+    expect(i18n.languageLabel('de')).toBe('Deutsch');
+    expect(i18n.languageLabel('it')).toBe('Italiano');
+    expect(i18n.languageLabel('es')).toBe('Español');
+  });
 });

@@ -3,6 +3,7 @@ import {
   DEFAULT_LANGUAGE,
   LANGUAGES,
   type Language,
+  localeFor,
   type TranslationKey,
   translations,
 } from './translations';
@@ -37,6 +38,19 @@ export class I18nService {
     }
   }
 
+  /** The display name (endonym) of a language, for the language switcher. */
+  languageLabel(language: Language): string {
+    return this.t(`lang.${language}` as TranslationKey);
+  }
+
+  /**
+   * The BCP-47 locale for the current language, for `Intl` date/time formatting.
+   * Reads the language signal, so bindings that call it re-render on a switch.
+   */
+  locale(): string {
+    return localeFor(this._language());
+  }
+
   /** Translate a key in the current language, falling back to German, then the key. */
   t(key: TranslationKey): string {
     const language = this._language();
@@ -46,9 +60,11 @@ export class I18nService {
   }
 
   /**
-   * Pick a bilingual value (e.g. a service description) for the current language,
-   * falling back to the German one. Reads the language signal, so bindings that
-   * call it re-render on a language switch.
+   * Pick a bilingual value (e.g. a service description) for the current language.
+   * DB-backed content is stored only in German and English (see ADR-0005), so a
+   * third UI language (fr/it/es) shows the English value, with German as the
+   * last-resort fallback. Reads the language signal, so bindings that call it
+   * re-render on a language switch.
    */
   pick(de: string | null | undefined, en: string | null | undefined): string {
     const value = this._language() === 'de' ? de : en;
@@ -66,8 +82,10 @@ export class I18nService {
   private readStoredLanguage(): Language {
     try {
       const stored = localStorage.getItem(STORAGE_KEY);
-      if (stored === 'de' || stored === 'en') {
-        return stored;
+      // Validate against the supported set, so adding a language needs no change
+      // here and a stale/unknown stored value falls back to the default.
+      if (stored !== null && (LANGUAGES as readonly string[]).includes(stored)) {
+        return stored as Language;
       }
     } catch {
       // Ignore and use the default.

@@ -1,8 +1,8 @@
-import { Component, inject } from '@angular/core';
+import { Component, computed, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { I18nService } from '../i18n/i18n.service';
 import { AdminAuthService } from './admin-auth.service';
-import { ADMIN_SECTIONS } from './admin-sections';
+import { visibleSections } from './admin-sections';
 
 // Admin landing: a greeting plus cards linking to the management sections.
 // Navigation, theme toggle and logout live in the surrounding AdminLayout shell.
@@ -14,7 +14,7 @@ import { ADMIN_SECTIONS } from './admin-sections';
     <p class="who">{{ i18n.t('admin.loggedInAs') }} {{ auth.admin()?.email }}</p>
 
     <nav class="cards" [attr.aria-label]="i18n.t('admin.sections')">
-      @for (section of sections; track section.link) {
+      @for (section of sections(); track section.link) {
         <a class="card" [routerLink]="section.link">{{
           i18n.t(section.key)
         }}</a>
@@ -59,5 +59,7 @@ import { ADMIN_SECTIONS } from './admin-sections';
 export class AdminDashboardPage {
   protected readonly i18n = inject(I18nService);
   protected readonly auth = inject(AdminAuthService);
-  protected readonly sections = ADMIN_SECTIONS;
+  protected readonly sections = computed(() =>
+    visibleSections(this.auth.admin()?.role ?? 'THERAPIST'),
+  );
 }

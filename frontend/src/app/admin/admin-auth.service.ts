@@ -2,8 +2,13 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable, inject, signal } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
 
+export type AdminRole = 'ADMIN' | 'THERAPIST';
+
 export interface AdminIdentity {
   email: string;
+  role: AdminRole;
+  /** The therapist a THERAPIST login manages (null for an ADMIN). */
+  therapistId: string | null;
 }
 
 /**
@@ -19,10 +24,14 @@ export class AdminAuthService {
   private loaded = false;
 
   async login(email: string, password: string): Promise<void> {
-    const identity = await firstValueFrom(
-      this.http.post<AdminIdentity>('/api/admin/login', { email, password }),
+    // The login response carries only the email, so fetch /me for the full
+    // identity (role + therapistId) that drives the role-aware navigation.
+    await firstValueFrom(
+      this.http.post('/api/admin/login', { email, password }),
     );
-    this._admin.set(identity);
+    this._admin.set(
+      await firstValueFrom(this.http.get<AdminIdentity>('/api/admin/me')),
+    );
     this.loaded = true;
   }
 

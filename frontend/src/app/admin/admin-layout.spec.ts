@@ -1,19 +1,31 @@
 import { provideHttpClient } from '@angular/common/http';
 import { provideHttpClientTesting } from '@angular/common/http/testing';
+import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { provideRouter, Router } from '@angular/router';
 import { vi } from 'vitest';
-import { AdminAuthService } from './admin-auth.service';
+import { type AdminIdentity, AdminAuthService } from './admin-auth.service';
 import { AdminLayout } from './admin-layout';
 import { AdminThemeService } from './admin-theme.service';
 
 describe('AdminLayout', () => {
+  // An ADMIN sees every section; the stub stands in for a loaded session.
+  const authStub = {
+    admin: signal<AdminIdentity | null>({
+      email: 'a@b.c',
+      role: 'ADMIN',
+      therapistId: null,
+    }).asReadonly(),
+    logout: vi.fn().mockResolvedValue(undefined),
+  };
+
   beforeEach(() => {
     try {
       localStorage.clear();
     } catch {
       // ignore
     }
+    authStub.logout.mockClear();
     document.body.removeAttribute('data-admin-theme');
     TestBed.configureTestingModule({
       imports: [AdminLayout],
@@ -21,6 +33,7 @@ describe('AdminLayout', () => {
         provideHttpClient(),
         provideHttpClientTesting(),
         provideRouter([]),
+        { provide: AdminAuthService, useValue: authStub },
       ],
     });
   });

@@ -3,9 +3,11 @@ import { practiceConfig } from '@praxis-buchung/config';
 import { DateTime } from 'luxon';
 import {
   createTransport,
+  type SendMailOptions,
   type Transporter,
   type TransportOptions,
 } from 'nodemailer';
+import { buildAppointmentIcs } from './ics.js';
 
 /**
  * Builds the SMTP transport options from the environment.
@@ -42,6 +44,8 @@ export interface BookingEmailData {
   serviceName: string;
   therapistName: string;
   startAt: Date;
+  endAt: Date;
+  appointmentId: string;
   cancelUrl: string;
 }
 
@@ -79,7 +83,24 @@ export class MailService {
       `${this.formatWhen(data.startAt)}\n\n` +
       `Möchten Sie den Termin absagen? Nutzen Sie diesen Link:\n${data.cancelUrl}\n\n` +
       `Freundliche Grüsse\n${practice}`;
-    await this.send(data.to, `Terminbestätigung – ${practice}`, body);
+    // Attach an iCalendar file so the patient can add the appointment to their
+    // own calendar. The UID ties the event to the appointment; the location is
+    // the practice address from the config.
+    const contact = practiceConfig.contact;
+    const ics = buildAppointmentIcs({
+      uid: `${data.appointmentId}@praxis-buchung`,
+      start: data.startAt,
+      end: data.endAt,
+      summary: `${data.serviceName} bei ${data.therapistName}`,
+      location: `${contact.street}, ${contact.postalCode} ${contact.city}`,
+    });
+    await this.send(data.to, `Terminbestätigung – ${practice}`, body, [
+      {
+        filename: 'termin.ics',
+        content: ics,
+        contentType: 'text/calendar; charset=utf-8; method=PUBLISH',
+      },
+    ]);
   }
 
   async sendCancellationConfirmation(data: CancellationEmailData): Promise<void> {
@@ -113,7 +134,18 @@ export class MailService {
       .toFormat("cccc, d. LLLL yyyy, HH:mm 'Uhr'");
   }
 
-  private async send(to: string, subject: string, text: string): Promise<void> {
-    await this.transporter.sendMail({ from: this.from, to, subject, text });
+  private async send(
+    to: string,
+    subject: string,
+    text: string,
+    attachments?: SendMailOptions['attachments'],
+  ): Promise<void> {
+    await this.transporter.sendMail({
+      from: this.from,
+      to,
+      subject,
+      text,
+      attachments,
+    });
   }
 }

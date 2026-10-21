@@ -1,0 +1,29 @@
+# Configuration for GitHub's automatically generated release notes.
+#
+# When a release is created with `--generate-notes`, GitHub lists every pull
+# request merged since the previous release and groups them into the categories
+# below *by the PR's labels* (not by commit message). A PR carrying any `exclude`
+# label is left out; anything that matches no named category falls into the
+# catch-all `*`, which must stay last. Label your PRs for the grouping to work.
+changelog:
+  exclude:
+    labels:
+      - duplicate
+      - invalid
+      - wontfix
+  categories:
+    - title: 🚀 Features
+      labels:
+        - enhancement
+    - title: 🐛 Bug Fixes
+      labels:
+        - bug
+    - title: 📚 Documentation
+      labels:
+        - documentation
+    - title: 📦 Dependencies
+      labels:
+        - dependencies
+    - title: Other Changes
+      labels:
+        - "*"

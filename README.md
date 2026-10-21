@@ -254,16 +254,34 @@ Deployment is automated from `main` and configured entirely under `infra/`:
 
 - **Images** — on merge to `main`, CI builds and pushes the `backend`, `frontend`
   and `migrate` images to GHCR, tagged `latest` and `sha-<commit>`.
-- **Server** — the `deploy` job copies `infra/compose.prod.yml` + `Caddyfile` +
-  `backup.sh` to the server and runs `docker compose pull && up -d`. It stays
-  dormant until the repo variable `DEPLOY_ENABLED` is `true` and the SSH / domain
-  secrets exist, so `main` is green long before a server is provisioned.
+- **Two environments, one manual gate** — after the images are published, the
+  reusable `deploy.yml` workflow deploys to **staging automatically**, then to
+  **production only after a manual approval**. Both calls share one definition, so
+  the environments can't drift; each environment's secrets (`SSH_HOST`, `SSH_USER`,
+  `SSH_KEY`, `DEPLOY_PATH`) point it at its own server. The whole chain stays
+  dormant until the repo variable `DEPLOY_ENABLED` is `true`, so `main` is green
+  long before a server is provisioned.
 - **Migrations** run as a one-off `migrate` service before the backend starts.
 - **HTTPS** is automatic via Caddy (Let's Encrypt for a real domain).
 - **Config** — every production variable is documented in
   [`infra/.env.prod.example`](infra/.env.prod.example).
 
-Rationale and trade-offs: [ADR-0009](docs/adr/0009-deployment-ghcr-ssh-compose-migrator.md).
+Rationale and trade-offs: [ADR-0009](docs/adr/0009-deployment-ghcr-ssh-compose-migrator.md)
+and [ADR-0010](docs/adr/0010-staging-production-manual-approval.md).
+
+#### Enabling the environments
+
+The manual approval is a GitHub feature configured outside the workflow, so it has
+to be set up once in the repository:
+
+1. **Settings → Environments** — create `staging` and `production`.
+2. On **`production`**, add **Required reviewers** (yourself / the release owner).
+   This is the gate: a production deploy pauses in the Actions UI until a reviewer
+   approves. Leave `staging` without reviewers so it deploys automatically.
+3. Add each environment's **secrets** (`SSH_HOST`, `SSH_USER`, `SSH_KEY`,
+   `DEPLOY_PATH`) pointing at that environment's server; `GHCR_PAT` can stay a
+   repo-level secret (same registry).
+4. Set the repo variable `DEPLOY_ENABLED` to `true` to arm the pipeline.
 
 ### Rollback
 
@@ -272,8 +290,9 @@ undone by **redeploying the previous one — not by rebuilding old code**. Run t
 **Rollback** workflow (`Actions → Rollback → Run workflow`) with the target
 `image_tag` (e.g. `sha-abc1234`, from the target commit's _Publish images to
 GHCR_ run). It verifies the images exist in GHCR, then repulls that tag and
-restarts the stack over SSH — the same mechanics as the deploy job. Like deploy,
-it is dormant until `DEPLOY_ENABLED` is `true`.
+restarts the stack over SSH — the same mechanics as the deploy workflow. Like
+deploy, it is dormant until `DEPLOY_ENABLED` is `true`, and it is intentionally
+**not** behind the production approval gate, so an emergency rollback stays fast.
 
 > **Rollback covers application code, not the database schema.** Prisma
 > migrations are forward-only (`prisma migrate deploy` applies pending ones and
@@ -326,6 +345,7 @@ Significant, hard-to-reverse decisions are recorded as ADRs in
 | [0007](docs/adr/0007-double-booking-prevention-exclusion-constraint.md) | Double-booking prevented by a Postgres GiST exclusion constraint |
 | [0008](docs/adr/0008-admin-auth-server-side-sessions.md) | Admin auth via server-side sessions in an HTTP-only cookie (not JWT) |
 | [0009](docs/adr/0009-deployment-ghcr-ssh-compose-migrator.md) | Deployment: GHCR images, SSH + Compose, a one-off migrator, Caddy for HTTPS |
+| [0010](docs/adr/0010-staging-production-manual-approval.md) | Separate staging/production environments with a manual approval gate before production |
 
 ## License
 

@@ -42,8 +42,7 @@ const validSeed: SeedData = {
       key: 'anna',
       firstName: 'Anna',
       lastName: 'Keller',
-      roleDe: 'Physiotherapeutin',
-      roleEn: 'Physiotherapist',
+      role: { de: 'Physiotherapeutin', en: 'Physiotherapist' },
       photoUrl: 'assets/team/anna.svg',
       activeFrom: '2024-01-01',
     },
@@ -53,8 +52,7 @@ const validSeed: SeedData = {
       key: 'physio',
       name: 'Physiotherapie',
       durationMin: 30,
-      descriptionDe: 'Beschreibung',
-      descriptionEn: 'Description',
+      description: { de: 'Beschreibung', en: 'Description' },
     },
   ],
   rooms: [],
@@ -128,8 +126,8 @@ describe('validatePracticeConfig', () => {
     const seed: SeedData = {
       ...validSeed,
       qualifications: [
-        { key: 'mt', nameDe: 'Manuelle Therapie', nameEn: 'Manual therapy' },
-        { key: 'mt', nameDe: 'Duplikat', nameEn: 'Duplicate' },
+        { key: 'mt', name: { de: 'Manuelle Therapie', en: 'Manual therapy' } },
+        { key: 'mt', name: { de: 'Duplikat', en: 'Duplicate' } },
       ],
     };
     expect(() => validatePracticeConfig(makeConfig(seed))).toThrow(/mt/);
@@ -206,7 +204,7 @@ describe('validatePracticeConfig', () => {
     const seed: SeedData = {
       ...validSeed,
       qualifications: [
-        { key: 'mt', nameDe: 'Manuelle Therapie', nameEn: 'Manual therapy' },
+        { key: 'mt', name: { de: 'Manuelle Therapie', en: 'Manual therapy' } },
       ],
       therapists: [{ ...validSeed.therapists[0], qualifications: ['mt'] }],
     };

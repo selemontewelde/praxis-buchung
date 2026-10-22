@@ -35,11 +35,11 @@ Alternatives rejected:
 
 - The language switch is immediate and offline-capable; no network round-trip.
 - Adding a UI language means adding one dictionary (TypeScript then flags any
-  missing key). The UI now ships DE/EN/FR/IT/ES this way (#34). DB-backed content,
-  however, is still a `…De`/`…En` column pair, so a non-DE/EN UI language shows the
-  English content value (German as last resort, via `pick`). Extending *content*
-  to more languages would need a schema change and remains deliberately out of
-  scope; date/time formatting follows the UI language via a central `localeFor`.
+  missing key). The UI now ships DE/EN/FR/IT/ES this way (#34). DB-backed content
+  originally lagged behind as a `…De`/`…En` column pair; it was remodelled to a
+  per-locale JSON map covering the same five languages in #129
+  ([ADR-0015](0015-localized-content-as-json-map.md)). Date/time formatting
+  follows the UI language via a central `localeFor`.
 - If the content model ever outgrows two languages or needs rich ICU formatting,
   revisit and move to a dedicated i18n library then.
 - The API sends both language variants of each field, slightly larger payloads in

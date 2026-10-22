@@ -96,6 +96,22 @@ export interface TimeWindow {
   endMin: number;
 }
 
+/** The content languages, mirroring the frontend's UI language set (ADR-0005). */
+export type ContentLocale = 'de' | 'en' | 'fr' | 'it' | 'es';
+
+/**
+ * A piece of DB-backed content translated per locale. `de` and `en` are required
+ * (so there is always a last-resort fallback); `fr`/`it`/`es` are optional and
+ * resolved by the frontend with a fallback chain (active → de → en → first set).
+ */
+export interface LocalizedText {
+  de: string;
+  en: string;
+  fr?: string;
+  it?: string;
+  es?: string;
+}
+
 export interface SeedTherapist {
   /** Stable key, used as the therapist's database id. */
   key: string;
@@ -104,8 +120,7 @@ export interface SeedTherapist {
   /** Optional professional/academic title. */
   title?: string;
   /** Role shown on the public team page, e.g. "Inhaberin & Physiotherapeutin". */
-  roleDe: string;
-  roleEn: string;
+  role: LocalizedText;
   /** Path to the portrait, relative to the frontend's served assets. */
   photoUrl: string;
   /** Start of the Active range as an ISO date string (stored UTC). */
@@ -121,8 +136,7 @@ export interface SeedTherapist {
 export interface SeedQualification {
   /** Stable key, used as the qualification's database id. */
   key: string;
-  nameDe: string;
-  nameEn: string;
+  name: LocalizedText;
 }
 
 export interface SeedService {
@@ -132,8 +146,7 @@ export interface SeedService {
   /** Fixed treatment duration in minutes. */
   durationMin: number;
   /** Public description, shown on the services page. */
-  descriptionDe: string;
-  descriptionEn: string;
+  description: LocalizedText;
   /**
    * Optional room/equipment (by key) this service requires. When set, a slot is
    * only offered when that room is free as well as the therapist, and the room

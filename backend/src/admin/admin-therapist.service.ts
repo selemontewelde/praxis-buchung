@@ -3,6 +3,8 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
+import type { LocalizedText } from '@praxis-buchung/config';
+import { asLocalizedText, toJsonInput } from '../common/localized-text.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import type {
   CreateTherapistDto,
@@ -14,8 +16,7 @@ export interface AdminTherapistView {
   firstName: string;
   lastName: string;
   title: string | null;
-  roleDe: string | null;
-  roleEn: string | null;
+  role: LocalizedText | null;
   photoUrl: string | null;
   activeFrom: string;
   activeUntil: string | null;
@@ -37,8 +38,7 @@ export class AdminTherapistService {
       firstName: t.firstName,
       lastName: t.lastName,
       title: t.title,
-      roleDe: t.roleDe,
-      roleEn: t.roleEn,
+      role: asLocalizedText(t.role),
       photoUrl: t.photoUrl,
       activeFrom: t.activeFrom.toISOString(),
       activeUntil: t.activeUntil?.toISOString() ?? null,
@@ -52,8 +52,7 @@ export class AdminTherapistService {
         firstName: dto.firstName,
         lastName: dto.lastName,
         title: dto.title ?? null,
-        roleDe: dto.roleDe,
-        roleEn: dto.roleEn,
+        role: toJsonInput(dto.role),
         photoUrl: dto.photoUrl ?? null,
         activeFrom: new Date(dto.activeFrom),
         activeUntil:
@@ -71,8 +70,9 @@ export class AdminTherapistService {
         ...(dto.firstName !== undefined ? { firstName: dto.firstName } : {}),
         ...(dto.lastName !== undefined ? { lastName: dto.lastName } : {}),
         ...(dto.title !== undefined ? { title: dto.title } : {}),
-        ...(dto.roleDe !== undefined ? { roleDe: dto.roleDe } : {}),
-        ...(dto.roleEn !== undefined ? { roleEn: dto.roleEn } : {}),
+        ...(dto.role !== undefined
+          ? { role: toJsonInput(dto.role) }
+          : {}),
         ...(dto.photoUrl !== undefined ? { photoUrl: dto.photoUrl } : {}),
         ...(dto.activeFrom !== undefined
           ? { activeFrom: new Date(dto.activeFrom) }

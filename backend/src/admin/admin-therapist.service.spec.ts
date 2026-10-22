@@ -13,8 +13,7 @@ describe('AdminTherapistService', () => {
             firstName: 'Anna',
             lastName: 'Keller',
             title: null,
-            roleDe: 'r',
-            roleEn: 'r',
+            role: { de: 'r', en: 'r' },
             photoUrl: null,
             activeFrom: new Date('2024-01-01'),
             activeUntil: null,
@@ -36,8 +35,7 @@ describe('AdminTherapistService', () => {
     const result = await new AdminTherapistService(prisma).create({
       firstName: 'Ben',
       lastName: 'Moser',
-      roleDe: 'Physiotherapeut',
-      roleEn: 'Physiotherapist',
+      role: { de: 'Physiotherapeut', en: 'Physiotherapist' },
       activeFrom: '2026-01-01',
     });
 
@@ -97,7 +95,9 @@ describe('AdminTherapistService', () => {
       therapist: { findUnique: vi.fn().mockResolvedValue(null), update: vi.fn() },
     } as unknown as PrismaService;
     await expect(
-      new AdminTherapistService(prisma).update('ghost', { roleDe: 'x' }),
+      new AdminTherapistService(prisma).update('ghost', {
+        role: { de: 'x', en: 'x' },
+      }),
     ).rejects.toBeInstanceOf(NotFoundException);
   });
 

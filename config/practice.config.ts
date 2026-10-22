@@ -52,8 +52,13 @@ export const practiceConfig: PracticeConfig = {
         firstName: 'Anna',
         lastName: 'Keller',
         title: 'PT',
-        roleDe: 'Inhaberin & Physiotherapeutin',
-        roleEn: 'Owner & physiotherapist',
+        role: {
+          de: 'Inhaberin & Physiotherapeutin',
+          en: 'Owner & physiotherapist',
+          fr: 'Propriétaire & physiothérapeute',
+          it: 'Titolare e fisioterapista',
+          es: 'Propietaria y fisioterapeuta',
+        },
         photoUrl: 'assets/team/anna.svg',
         activeFrom: '2024-01-01',
         qualifications: ['manual-therapy-cert', 'lymph-drainage-cert'],
@@ -62,8 +67,13 @@ export const practiceConfig: PracticeConfig = {
         key: 'ben',
         firstName: 'Ben',
         lastName: 'Moser',
-        roleDe: 'Physiotherapeut',
-        roleEn: 'Physiotherapist',
+        role: {
+          de: 'Physiotherapeut',
+          en: 'Physiotherapist',
+          fr: 'Physiothérapeute',
+          it: 'Fisioterapista',
+          es: 'Fisioterapeuta',
+        },
         photoUrl: 'assets/team/ben.svg',
         activeFrom: '2024-01-01',
         qualifications: ['sports-physio-cert'],
@@ -75,44 +85,61 @@ export const practiceConfig: PracticeConfig = {
         key: 'physiotherapy',
         name: 'Physiotherapie',
         durationMin: 30,
-        descriptionDe:
-          'Individuelle Behandlung bei Beschwerden des Bewegungsapparats.',
-        descriptionEn:
-          'Individual treatment for complaints of the musculoskeletal system.',
+        description: {
+          de: 'Individuelle Behandlung bei Beschwerden des Bewegungsapparats.',
+          en: 'Individual treatment for complaints of the musculoskeletal system.',
+          fr: "Traitement individuel des troubles de l'appareil locomoteur.",
+          it: "Trattamento individuale dei disturbi dell'apparato locomotore.",
+          es: 'Tratamiento individual de las dolencias del aparato locomotor.',
+        },
       },
       {
         key: 'manual-therapy',
         name: 'Manuelle Therapie',
         durationMin: 30,
-        descriptionDe:
-          'Gezielte Handgriffe zur Mobilisation von Gelenken und Wirbelsäule.',
-        descriptionEn:
-          'Targeted hands-on techniques to mobilise joints and the spine.',
+        description: {
+          de: 'Gezielte Handgriffe zur Mobilisation von Gelenken und Wirbelsäule.',
+          en: 'Targeted hands-on techniques to mobilise joints and the spine.',
+          fr: "Techniques manuelles ciblées pour mobiliser les articulations et la colonne vertébrale.",
+          it: 'Tecniche manuali mirate per mobilizzare le articolazioni e la colonna vertebrale.',
+          es: 'Técnicas manuales específicas para movilizar las articulaciones y la columna vertebral.',
+        },
       },
       {
         key: 'lymph-drainage',
         name: 'Lymphdrainage',
         durationMin: 45,
-        descriptionDe:
-          'Sanfte Technik zur Entstauung bei Schwellungen und nach Operationen.',
-        descriptionEn:
-          'Gentle technique to reduce swelling and support post-surgery recovery.',
+        description: {
+          de: 'Sanfte Technik zur Entstauung bei Schwellungen und nach Operationen.',
+          en: 'Gentle technique to reduce swelling and support post-surgery recovery.',
+          fr: 'Technique douce pour réduire les gonflements et après une opération.',
+          it: 'Tecnica delicata per ridurre i gonfiori e dopo gli interventi chirurgici.',
+          es: 'Técnica suave para reducir la hinchazón y tras una operación.',
+        },
       },
       {
         key: 'massage',
         name: 'Klassische Massage',
         durationMin: 20,
-        descriptionDe: 'Entspannende Massage zur Lockerung verspannter Muskulatur.',
-        descriptionEn: 'Relaxing massage to release tense muscles.',
+        description: {
+          de: 'Entspannende Massage zur Lockerung verspannter Muskulatur.',
+          en: 'Relaxing massage to release tense muscles.',
+          fr: 'Massage relaxant pour détendre les muscles tendus.',
+          it: 'Massaggio rilassante per sciogliere la muscolatura tesa.',
+          es: 'Masaje relajante para aliviar la musculatura tensa.',
+        },
       },
       {
         key: 'mtt',
         name: 'Medizinische Trainingstherapie',
         durationMin: 45,
-        descriptionDe:
-          'Gerätegestütztes Training zum Muskelaufbau — findet im Geräteraum statt.',
-        descriptionEn:
-          'Equipment-based training to rebuild strength — held in the equipment room.',
+        description: {
+          de: 'Gerätegestütztes Training zum Muskelaufbau — findet im Geräteraum statt.',
+          en: 'Equipment-based training to rebuild strength — held in the equipment room.',
+          fr: "Entraînement sur appareils pour renforcer la musculature — a lieu dans la salle d'appareils.",
+          it: "Allenamento con attrezzi per rinforzare la muscolatura — si svolge nella sala attrezzi.",
+          es: 'Entrenamiento con aparatos para fortalecer la musculatura — en la sala de aparatos.',
+        },
         // Requires the shared equipment room: both therapists can deliver it, but
         // only one MTT session can run at a time because they share the room.
         room: 'geraeteraum',
@@ -128,18 +155,33 @@ export const practiceConfig: PracticeConfig = {
     qualifications: [
       {
         key: 'manual-therapy-cert',
-        nameDe: 'Zertifikat Manuelle Therapie',
-        nameEn: 'Manual Therapy certificate',
+        name: {
+          de: 'Zertifikat Manuelle Therapie',
+          en: 'Manual Therapy certificate',
+          fr: 'Certificat de thérapie manuelle',
+          it: 'Certificato di terapia manuale',
+          es: 'Certificado de terapia manual',
+        },
       },
       {
         key: 'lymph-drainage-cert',
-        nameDe: 'Ausbildung Lymphdrainage',
-        nameEn: 'Lymph Drainage training',
+        name: {
+          de: 'Ausbildung Lymphdrainage',
+          en: 'Lymph Drainage training',
+          fr: 'Formation en drainage lymphatique',
+          it: 'Formazione in drenaggio linfatico',
+          es: 'Formación en drenaje linfático',
+        },
       },
       {
         key: 'sports-physio-cert',
-        nameDe: 'Sportphysiotherapie',
-        nameEn: 'Sports Physiotherapy',
+        name: {
+          de: 'Sportphysiotherapie',
+          en: 'Sports Physiotherapy',
+          fr: 'Physiothérapie du sport',
+          it: 'Fisioterapia sportiva',
+          es: 'Fisioterapia deportiva',
+        },
       },
     ],
 

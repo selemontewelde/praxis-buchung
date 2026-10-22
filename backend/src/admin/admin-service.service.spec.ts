@@ -33,7 +33,7 @@ describe('AdminServiceService', () => {
     expect(update.mock.calls[0][0].data).toEqual({ active: false });
   });
 
-  it('updates only the provided fields and clears a blank description to null', async () => {
+  it('updates only the provided fields, replacing the localized description', async () => {
     const update = vi.fn().mockResolvedValue({});
     const prisma = {
       service: {
@@ -44,12 +44,12 @@ describe('AdminServiceService', () => {
 
     await new AdminServiceService(prisma).update('svc-1', {
       name: 'New',
-      descriptionDe: '',
+      description: { de: 'Neu', en: 'New' },
     });
-    // durationMin / descriptionEn / active are untouched; blank DE → null.
+    // durationMin / active are untouched; the description map is set as a whole.
     expect(update.mock.calls[0][0].data).toEqual({
       name: 'New',
-      descriptionDe: null,
+      description: { de: 'Neu', en: 'New' },
     });
   });
 

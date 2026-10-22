@@ -16,8 +16,7 @@ describe('PublicContentController', () => {
               id: 'physio',
               name: 'Physiotherapie',
               durationMin: 30,
-              descriptionDe: 'DE',
-              descriptionEn: 'EN',
+              description: { de: 'DE', en: 'EN', fr: 'FR' },
               createdAt: new Date(),
               updatedAt: new Date(),
             },
@@ -32,8 +31,7 @@ describe('PublicContentController', () => {
           id: 'physio',
           name: 'Physiotherapie',
           durationMin: 30,
-          descriptionDe: 'DE',
-          descriptionEn: 'EN',
+          description: { de: 'DE', en: 'EN', fr: 'FR' },
         },
       ]);
     });
@@ -46,8 +44,7 @@ describe('PublicContentController', () => {
         firstName: 'A',
         lastName: 'B',
         title: null,
-        roleDe: 'Rolle',
-        roleEn: 'Role',
+        role: { de: 'Rolle', en: 'Role' },
         photoUrl: 'assets/team/x.svg',
         activeFrom: new Date('2024-01-01'),
         activeUntil: null,
@@ -63,10 +60,16 @@ describe('PublicContentController', () => {
             therapist({
               firstName: 'Anna',
               activeUntil: null,
-              // Out of order → the controller sorts by nameDe.
+              // Out of order → the controller sorts by name.de.
               qualifications: [
-                { qualification: { nameDe: 'Manuelle Therapie', nameEn: 'Manual' } },
-                { qualification: { nameDe: 'Lymphdrainage', nameEn: 'Lymph' } },
+                {
+                  qualification: {
+                    name: { de: 'Manuelle Therapie', en: 'Manual' },
+                  },
+                },
+                {
+                  qualification: { name: { de: 'Lymphdrainage', en: 'Lymph' } },
+                },
               ],
             }),
             // Departed: active range ended in the past → must be excluded.
@@ -83,12 +86,11 @@ describe('PublicContentController', () => {
       expect(result).toHaveLength(1);
       expect(result[0]).toMatchObject({
         firstName: 'Anna',
-        roleDe: 'Rolle',
-        roleEn: 'Role',
+        role: { de: 'Rolle', en: 'Role' },
         photoUrl: 'assets/team/x.svg',
         qualifications: [
-          { nameDe: 'Lymphdrainage', nameEn: 'Lymph' },
-          { nameDe: 'Manuelle Therapie', nameEn: 'Manual' },
+          { name: { de: 'Lymphdrainage', en: 'Lymph' } },
+          { name: { de: 'Manuelle Therapie', en: 'Manual' } },
         ],
       });
       expect(result[0]).not.toHaveProperty('activeFrom');

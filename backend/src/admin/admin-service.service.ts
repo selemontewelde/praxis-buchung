@@ -1,4 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
+import type { LocalizedText } from '@praxis-buchung/config';
+import { asLocalizedText, toJsonInput } from '../common/localized-text.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import type {
   CreateServiceDto,
@@ -9,8 +11,7 @@ export interface AdminServiceView {
   id: string;
   name: string;
   durationMin: number;
-  descriptionDe: string | null;
-  descriptionEn: string | null;
+  description: LocalizedText | null;
   active: boolean;
 }
 
@@ -27,8 +28,7 @@ export class AdminServiceService {
       id: s.id,
       name: s.name,
       durationMin: s.durationMin,
-      descriptionDe: s.descriptionDe,
-      descriptionEn: s.descriptionEn,
+      description: asLocalizedText(s.description),
       active: s.active,
     }));
   }
@@ -38,8 +38,9 @@ export class AdminServiceService {
       data: {
         name: dto.name,
         durationMin: dto.durationMin,
-        descriptionDe: dto.descriptionDe ?? null,
-        descriptionEn: dto.descriptionEn ?? null,
+        ...(dto.description !== undefined
+          ? { description: toJsonInput(dto.description) }
+          : {}),
       },
     });
     return { id: service.id };
@@ -57,13 +58,10 @@ export class AdminServiceService {
         ...(dto.durationMin !== undefined
           ? { durationMin: dto.durationMin }
           : {}),
-        // An empty string clears the description back to NULL, so edit and
-        // create stay consistent (both store null for "no description").
-        ...(dto.descriptionDe !== undefined
-          ? { descriptionDe: dto.descriptionDe === '' ? null : dto.descriptionDe }
-          : {}),
-        ...(dto.descriptionEn !== undefined
-          ? { descriptionEn: dto.descriptionEn === '' ? null : dto.descriptionEn }
+        // When provided, the localized description replaces the stored map as a
+        // whole (de + en are required by the DTO, so it always stays valid).
+        ...(dto.description !== undefined
+          ? { description: toJsonInput(dto.description) }
           : {}),
         ...(dto.active !== undefined ? { active: dto.active } : {}),
       },

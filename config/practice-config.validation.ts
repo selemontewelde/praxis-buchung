@@ -1,4 +1,5 @@
 import type {
+  LocalizedText,
   PracticeConfig,
   TimeWindow,
 } from './practice-config.types.js';
@@ -150,6 +151,29 @@ export function validatePracticeConfig(config: PracticeConfig): void {
         );
       }
     }
+  }
+
+  // Localized content must carry both required locales (de + en) non-empty, so the
+  // public read path always has a fallback (ADR-0015). fr/it/es stay optional.
+  const requireLocalized = (text: LocalizedText, label: string): void => {
+    if (text.de.trim() === '') {
+      problems.push(`${label} is missing German (de) text`);
+    }
+    if (text.en.trim() === '') {
+      problems.push(`${label} is missing English (en) text`);
+    }
+  };
+  for (const therapist of therapists) {
+    requireLocalized(therapist.role, `therapist "${therapist.key}" role`);
+  }
+  for (const service of services) {
+    requireLocalized(service.description, `service "${service.key}" description`);
+  }
+  for (const qualification of qualifications) {
+    requireLocalized(
+      qualification.name,
+      `qualification "${qualification.key}" name`,
+    );
   }
 
   for (const capability of capabilities) {

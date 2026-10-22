@@ -39,15 +39,34 @@ export interface AuthenticatedAdmin {
 export class AuthService {
   constructor(private readonly prisma: PrismaService) {}
 
+  // A fixed argon2 hash to verify against when the email is unknown, memoized so
+  // the cost is paid once. argon2's default params here match those used for real
+  // passwords, so a verify against it costs the same — login does equal work
+  // whether or not the email exists, closing a user-enumeration timing leak (#133).
+  private dummyHashPromise: Promise<string> | null = null;
+  private dummyHash(): Promise<string> {
+    // Drop the memo on rejection so a transient failure to compute the dummy hash
+    // doesn't poison every later login with the same cached rejection.
+    this.dummyHashPromise ??= hash('user-enumeration-timing-guard').catch(
+      (err: unknown) => {
+        this.dummyHashPromise = null;
+        throw err;
+      },
+    );
+    return this.dummyHashPromise;
+  }
+
   async login(
     email: string,
     password: string,
     now = new Date(),
   ): Promise<SessionResult> {
     const admin = await this.prisma.adminUser.findUnique({ where: { email } });
-    // Verify even on a missing user would need a dummy hash to fully avoid timing
-    // leaks; for a single-practice admin the simple check is acceptable.
-    if (admin === null || !(await verify(admin.passwordHash, password))) {
+    // Always verify — against the real hash, or a dummy when the email is unknown
+    // — so response time can't distinguish a known from an unknown email (#133).
+    const passwordHash = admin?.passwordHash ?? (await this.dummyHash());
+    const ok = await verify(passwordHash, password);
+    if (admin === null || !ok) {
       throw new UnauthorizedException('Invalid email or password');
     }
     const token = randomBytes(32).toString('hex');

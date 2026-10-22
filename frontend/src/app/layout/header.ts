@@ -44,22 +44,39 @@ import { I18nService } from '../i18n/i18n.service';
         }}</a>
       </nav>
 
-      <div
-        class="lang-switch"
-        role="group"
-        [attr.aria-label]="i18n.t('a11y.languageSwitch')"
-      >
-        @for (lang of i18n.languages; track lang) {
-          <button
-            type="button"
-            [class.active]="i18n.language() === lang"
-            [attr.aria-pressed]="i18n.language() === lang"
-            (click)="i18n.setLanguage(lang)"
-          >
-            {{ i18n.languageLabel(lang) }}
-          </button>
-        }
-      </div>
+      <span class="lang-switch">
+        <!-- Decorative globe: signals "language" without country flags (flags are
+             not languages, and a native <option> can't render icons anyway). -->
+        <svg
+          class="lang-globe"
+          aria-hidden="true"
+          focusable="false"
+          viewBox="0 0 24 24"
+          width="16"
+          height="16"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <circle cx="12" cy="12" r="10" />
+          <path d="M2 12h20" />
+          <path
+            d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"
+          />
+        </svg>
+        <select
+          class="lang-select"
+          [attr.aria-label]="i18n.t('a11y.languageSwitch')"
+          [value]="i18n.language()"
+          (change)="i18n.setLanguage($any($event.target).value)"
+        >
+          @for (lang of i18n.languages; track lang) {
+            <option [value]="lang">{{ i18n.languageLabel(lang) }}</option>
+          }
+        </select>
+      </span>
     </header>
   `,
   styles: `
@@ -113,21 +130,21 @@ import { I18nService } from '../i18n/i18n.service';
     }
     .lang-switch {
       display: inline-flex;
-      gap: 0.25rem;
+      align-items: center;
+      gap: 0.4rem;
+      color: var(--color-muted);
     }
-    .lang-switch button {
+    .lang-globe {
+      flex: none;
+    }
+    .lang-select {
       border: 1px solid var(--color-border);
-      background: transparent;
+      background: var(--color-surface);
       color: var(--color-text);
       border-radius: 999px;
       padding: 0.25rem 0.7rem;
       cursor: pointer;
       font: inherit;
-    }
-    .lang-switch button.active {
-      background: var(--color-primary);
-      color: #fff;
-      border-color: var(--color-primary);
     }
   `,
 })

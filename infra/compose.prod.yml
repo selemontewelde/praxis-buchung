@@ -40,6 +40,13 @@ services:
       BACKUP_RETENTION_DAYS: ${BACKUP_RETENTION_DAYS:-7}
       BACKUP_HOUR: ${BACKUP_HOUR:-3}
       TZ: ${TZ:-Europe/Zurich} # so "03:00" is the practice's local time
+      # Off-site replication (restic). All empty by default = dormant; set
+      # RESTIC_REPOSITORY + RESTIC_PASSWORD (and backend creds) to enable.
+      RESTIC_REPOSITORY: ${RESTIC_REPOSITORY:-}
+      RESTIC_PASSWORD: ${RESTIC_PASSWORD:-}
+      # S3-compatible backends (AWS S3, Backblaze B2, MinIO, ...).
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID:-}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY:-}
     volumes:
       - ./backup.sh:/backup.sh:ro
       - ./backups:/backups

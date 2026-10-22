@@ -10,6 +10,8 @@ import { AdminReassignController } from './admin-reassign.controller.js';
 import { AdminReassignService } from './admin-reassign.service.js';
 import { AdminServiceController } from './admin-service.controller.js';
 import { AdminServiceService } from './admin-service.service.js';
+import { AdminUserController } from './admin-user.controller.js';
+import { AdminUserService } from './admin-user.service.js';
 import { AdminTherapistController } from './admin-therapist.controller.js';
 import { AdminTherapistService } from './admin-therapist.service.js';
 
@@ -23,6 +25,7 @@ import { AdminTherapistService } from './admin-therapist.service.js';
     AdminServiceController,
     AdminAppointmentController,
     AdminReassignController,
+    AdminUserController,
   ],
   providers: [
     AdminTherapistService,
@@ -31,6 +34,7 @@ import { AdminTherapistService } from './admin-therapist.service.js';
     AdminBlockService,
     AdminServiceService,
     AdminAppointmentService,
+    AdminUserService,
   ],
 })
 export class AdminModule {}

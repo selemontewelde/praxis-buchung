@@ -1,6 +1,7 @@
 import { Component, inject, signal } from '@angular/core';
 import { PublicContentService } from '../core/content.service';
 import { I18nService } from '../i18n/i18n.service';
+import type { Language, LocalizedText } from '../i18n/translations';
 import {
   type AdminAppointment,
   AdminAppointmentApiService,
@@ -29,8 +30,7 @@ export class AdminTherapistsPage {
   protected readonly firstName = signal('');
   protected readonly lastName = signal('');
   protected readonly titleField = signal('');
-  protected readonly roleDe = signal('');
-  protected readonly roleEn = signal('');
+  protected readonly role = signal<LocalizedText>({});
   protected readonly photoUrl = signal('');
   protected readonly activeFrom = signal(new Date().toISOString().slice(0, 10));
   protected readonly activeUntil = signal('');
@@ -42,6 +42,22 @@ export class AdminTherapistsPage {
 
   protected set(ref: { set: (v: string) => void }, event: Event): void {
     ref.set((event.target as HTMLInputElement).value);
+  }
+
+  protected setRole(lang: Language, value: string): void {
+    this.role.update((map) => ({ ...map, [lang]: value }));
+  }
+
+  /** Trimmed role map with empty locales dropped (de + en required by the API). */
+  private cleanRole(): LocalizedText {
+    const cleaned: LocalizedText = {};
+    for (const lang of this.i18n.languages) {
+      const value = this.role()[lang]?.trim();
+      if (value) {
+        cleaned[lang] = value;
+      }
+    }
+    return cleaned;
   }
 
   protected isActive(t: AdminTherapist): boolean {
@@ -77,8 +93,7 @@ export class AdminTherapistsPage {
       firstName: this.firstName().trim(),
       lastName: this.lastName().trim(),
       title: this.titleField().trim() || undefined,
-      roleDe: this.roleDe().trim(),
-      roleEn: this.roleEn().trim(),
+      role: this.cleanRole(),
       photoUrl: this.photoUrl().trim() || undefined,
       activeFrom: this.activeFrom(),
       activeUntil: this.activeUntil() || undefined,
@@ -86,8 +101,7 @@ export class AdminTherapistsPage {
     this.firstName.set('');
     this.lastName.set('');
     this.titleField.set('');
-    this.roleDe.set('');
-    this.roleEn.set('');
+    this.role.set({});
     this.photoUrl.set('');
     this.activeUntil.set('');
     await this.reload();

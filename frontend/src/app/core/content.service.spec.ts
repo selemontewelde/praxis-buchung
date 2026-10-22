@@ -11,8 +11,7 @@ const services: PublicService[] = [
     id: 'physio',
     name: 'Physiotherapie',
     durationMin: 30,
-    descriptionDe: 'DE',
-    descriptionEn: 'EN',
+    description: { de: 'DE', en: 'EN', fr: 'FR' },
   },
 ];
 

@@ -1,5 +1,6 @@
 import { Component, inject, signal } from '@angular/core';
 import { I18nService } from '../i18n/i18n.service';
+import type { Language, LocalizedText } from '../i18n/translations';
 import {
   type AdminService,
   AdminServiceApiService,
@@ -19,14 +20,12 @@ import {
         <span>{{ i18n.t('adminServices.duration') }}</span>
         <input type="number" min="1" [value]="newDuration()" (input)="newDuration.set($any($event.target).value)" />
       </label>
-      <label>
-        <span>{{ i18n.t('adminServices.descDe') }}</span>
-        <input [value]="newDescDe()" (input)="newDescDe.set($any($event.target).value)" />
-      </label>
-      <label>
-        <span>{{ i18n.t('adminServices.descEn') }}</span>
-        <input [value]="newDescEn()" (input)="newDescEn.set($any($event.target).value)" />
-      </label>
+      @for (lang of i18n.languages; track lang) {
+        <label>
+          <span>{{ i18n.t('adminServices.description') }} ({{ i18n.languageLabel(lang) }})</span>
+          <input [value]="newDesc()[lang] ?? ''" (input)="setNewDesc(lang, $any($event.target).value)" />
+        </label>
+      }
       <button type="submit" [disabled]="newName().trim() === '' || +newDuration() < 1">
         {{ i18n.t('adminServices.add') }}
       </button>
@@ -52,16 +51,13 @@ import {
               [value]="s.durationMin"
               (input)="patch(s.id, { durationMin: +$any($event.target).value })"
             />
-            <input
-              [value]="s.descriptionDe ?? ''"
-              [placeholder]="i18n.t('adminServices.descDe')"
-              (input)="patch(s.id, { descriptionDe: $any($event.target).value })"
-            />
-            <input
-              [value]="s.descriptionEn ?? ''"
-              [placeholder]="i18n.t('adminServices.descEn')"
-              (input)="patch(s.id, { descriptionEn: $any($event.target).value })"
-            />
+            @for (lang of i18n.languages; track lang) {
+              <input
+                [value]="s.description?.[lang] ?? ''"
+                [placeholder]="i18n.t('adminServices.description') + ' (' + i18n.languageLabel(lang) + ')'"
+                (input)="patchDesc(s.id, lang, $any($event.target).value)"
+              />
+            }
             @if (!s.active) {
               <span class="badge">{{ i18n.t('adminServices.archived') }}</span>
             }
@@ -97,8 +93,7 @@ export class AdminServicesPage {
 
   protected readonly newName = signal('');
   protected readonly newDuration = signal('30');
-  protected readonly newDescDe = signal('');
-  protected readonly newDescEn = signal('');
+  protected readonly newDesc = signal<LocalizedText>({});
 
   constructor() {
     void this.reload();
@@ -114,6 +109,34 @@ export class AdminServicesPage {
     );
   }
 
+  protected setNewDesc(lang: Language, value: string): void {
+    this.newDesc.update((map) => ({ ...map, [lang]: value }));
+  }
+
+  /** Update one locale of a service's description map in place. */
+  protected patchDesc(id: string, lang: Language, value: string): void {
+    this.patch(id, {
+      description: {
+        ...this.services().find((s) => s.id === id)?.description,
+        [lang]: value,
+      },
+    });
+  }
+
+  // Trim and drop empty locales. The backend requires de + en, so a description
+  // is only sent when both are present; a partial edit is left unchanged rather
+  // than sent. Clearing an existing description back to none is not offered here.
+  private cleanDesc(map: LocalizedText | null): LocalizedText | undefined {
+    const cleaned: LocalizedText = {};
+    for (const lang of this.i18n.languages) {
+      const value = map?.[lang]?.trim();
+      if (value) {
+        cleaned[lang] = value;
+      }
+    }
+    return cleaned.de && cleaned.en ? cleaned : undefined;
+  }
+
   protected async create(): Promise<void> {
     if (this.newName().trim() === '' || +this.newDuration() < 1) {
       return;
@@ -122,13 +145,11 @@ export class AdminServicesPage {
       await this.api.create({
         name: this.newName().trim(),
         durationMin: +this.newDuration(),
-        descriptionDe: this.newDescDe().trim() || undefined,
-        descriptionEn: this.newDescEn().trim() || undefined,
+        description: this.cleanDesc(this.newDesc()),
       });
       this.newName.set('');
       this.newDuration.set('30');
-      this.newDescDe.set('');
-      this.newDescEn.set('');
+      this.newDesc.set({});
       this.status.set('adminServices.saved');
       await this.reload();
     } catch {
@@ -141,8 +162,7 @@ export class AdminServicesPage {
       await this.api.update(s.id, {
         name: s.name,
         durationMin: s.durationMin,
-        descriptionDe: s.descriptionDe ?? '',
-        descriptionEn: s.descriptionEn ?? '',
+        description: this.cleanDesc(s.description),
       });
       this.status.set('adminServices.saved');
     } catch {

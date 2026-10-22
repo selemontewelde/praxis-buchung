@@ -28,16 +28,14 @@ describe('AdminServicesPage', () => {
         id: 's1',
         name: 'Massage',
         durationMin: 30,
-        descriptionDe: 'Entspannung',
-        descriptionEn: 'Relaxation',
+        description: { de: 'Entspannung', en: 'Relaxation' },
         active: true,
       },
       {
         id: 's2',
         name: 'Fango',
         durationMin: 45,
-        descriptionDe: null,
-        descriptionEn: null,
+        description: null,
         active: false,
       },
     ]);

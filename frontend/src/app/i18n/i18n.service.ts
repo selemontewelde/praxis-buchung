@@ -3,6 +3,7 @@ import {
   DEFAULT_LANGUAGE,
   LANGUAGES,
   type Language,
+  type LocalizedText,
   localeFor,
   type TranslationKey,
   translations,
@@ -60,15 +61,21 @@ export class I18nService {
   }
 
   /**
-   * Pick a bilingual value (e.g. a service description) for the current language.
-   * DB-backed content is stored only in German and English (see ADR-0005), so a
-   * third UI language (fr/it/es) shows the English value, with German as the
-   * last-resort fallback. Reads the language signal, so bindings that call it
-   * re-render on a language switch.
+   * Pick a localized value (e.g. a service description) for the current language,
+   * with a fallback chain: active → de → en → first value present → '' (ADR-0015).
+   * Reads the language signal, so bindings that call it re-render on a switch.
    */
-  pick(de: string | null | undefined, en: string | null | undefined): string {
-    const value = this._language() === 'de' ? de : en;
-    return value ?? de ?? '';
+  pick(text: LocalizedText | null | undefined): string {
+    if (text === null || text === undefined) {
+      return '';
+    }
+    return (
+      text[this._language()] ??
+      text.de ??
+      text.en ??
+      Object.values(text).find((value) => value !== undefined) ??
+      ''
+    );
   }
 
   private reflectOnDocument(language: Language): void {

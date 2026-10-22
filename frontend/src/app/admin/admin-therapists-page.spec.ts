@@ -28,8 +28,7 @@ describe('AdminTherapistsPage', () => {
         id: 'physio',
         name: 'Physiotherapie',
         durationMin: 30,
-        descriptionDe: null,
-        descriptionEn: null,
+        description: null,
       },
     ]);
     httpMock.expectOne('/api/admin/therapists').flush([
@@ -38,8 +37,7 @@ describe('AdminTherapistsPage', () => {
         firstName: 'Anna',
         lastName: 'Keller',
         title: null,
-        roleDe: 'r',
-        roleEn: 'r',
+        role: { de: 'r', en: 'r' },
         photoUrl: null,
         activeFrom: '2024-01-01T00:00:00.000Z',
         activeUntil: null,

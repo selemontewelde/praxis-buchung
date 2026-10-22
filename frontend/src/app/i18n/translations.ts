@@ -5,6 +5,13 @@
  */
 export type Language = 'de' | 'en' | 'fr' | 'it' | 'es';
 
+/**
+ * DB-backed content translated per locale, as served by the public API (the
+ * backend guarantees `de` and `en`; `fr`/`it`/`es` are optional). `i18n.pick()`
+ * resolves the active language with a fallback chain.
+ */
+export type LocalizedText = Partial<Record<Language, string>>;
+
 export const DEFAULT_LANGUAGE: Language = 'de';
 export const LANGUAGES: readonly Language[] = ['de', 'en', 'fr', 'it', 'es'];
 
@@ -137,8 +144,7 @@ const de = {
   'adminTherapists.firstName': 'Vorname',
   'adminTherapists.lastName': 'Nachname',
   'adminTherapists.titleLabel': 'Titel',
-  'adminTherapists.roleDe': 'Rolle (DE)',
-  'adminTherapists.roleEn': 'Rolle (EN)',
+  'adminTherapists.role': 'Rolle',
   'adminTherapists.photoUrl': 'Foto-Pfad',
   'adminTherapists.activeFrom': 'Aktiv ab',
   'adminTherapists.activeUntil': 'Aktiv bis',
@@ -199,8 +205,7 @@ const de = {
   'adminServices.add': 'Leistung anlegen',
   'adminServices.name': 'Name',
   'adminServices.duration': 'Dauer (Min.)',
-  'adminServices.descDe': 'Beschreibung (DE)',
-  'adminServices.descEn': 'Beschreibung (EN)',
+  'adminServices.description': 'Beschreibung',
   'adminServices.save': 'Speichern',
   'adminServices.archive': 'Archivieren',
   'adminServices.reactivate': 'Reaktivieren',
@@ -347,8 +352,7 @@ const en: Record<TranslationKey, string> = {
   'adminTherapists.firstName': 'First name',
   'adminTherapists.lastName': 'Last name',
   'adminTherapists.titleLabel': 'Title',
-  'adminTherapists.roleDe': 'Role (DE)',
-  'adminTherapists.roleEn': 'Role (EN)',
+  'adminTherapists.role': 'Role',
   'adminTherapists.photoUrl': 'Photo path',
   'adminTherapists.activeFrom': 'Active from',
   'adminTherapists.activeUntil': 'Active until',
@@ -409,8 +413,7 @@ const en: Record<TranslationKey, string> = {
   'adminServices.add': 'Add service',
   'adminServices.name': 'Name',
   'adminServices.duration': 'Duration (min)',
-  'adminServices.descDe': 'Description (DE)',
-  'adminServices.descEn': 'Description (EN)',
+  'adminServices.description': 'Description',
   'adminServices.save': 'Save',
   'adminServices.archive': 'Archive',
   'adminServices.reactivate': 'Reactivate',
@@ -547,8 +550,7 @@ const fr: Record<TranslationKey, string> = {
   'adminTherapists.firstName': 'Prénom',
   'adminTherapists.lastName': 'Nom',
   'adminTherapists.titleLabel': 'Titre',
-  'adminTherapists.roleDe': 'Rôle (DE)',
-  'adminTherapists.roleEn': 'Rôle (EN)',
+  'adminTherapists.role': 'Rôle',
   'adminTherapists.photoUrl': 'Chemin de la photo',
   'adminTherapists.activeFrom': 'Actif à partir du',
   'adminTherapists.activeUntil': 'Actif jusqu’au',
@@ -608,8 +610,7 @@ const fr: Record<TranslationKey, string> = {
   'adminServices.add': 'Créer une prestation',
   'adminServices.name': 'Nom',
   'adminServices.duration': 'Durée (min)',
-  'adminServices.descDe': 'Description (DE)',
-  'adminServices.descEn': 'Description (EN)',
+  'adminServices.description': 'Description',
   'adminServices.save': 'Enregistrer',
   'adminServices.archive': 'Archiver',
   'adminServices.reactivate': 'Réactiver',
@@ -744,8 +745,7 @@ const it: Record<TranslationKey, string> = {
   'adminTherapists.firstName': 'Nome',
   'adminTherapists.lastName': 'Cognome',
   'adminTherapists.titleLabel': 'Titolo',
-  'adminTherapists.roleDe': 'Ruolo (DE)',
-  'adminTherapists.roleEn': 'Ruolo (EN)',
+  'adminTherapists.role': 'Ruolo',
   'adminTherapists.photoUrl': 'Percorso foto',
   'adminTherapists.activeFrom': 'Attivo dal',
   'adminTherapists.activeUntil': 'Attivo fino al',
@@ -804,8 +804,7 @@ const it: Record<TranslationKey, string> = {
   'adminServices.add': 'Crea prestazione',
   'adminServices.name': 'Nome',
   'adminServices.duration': 'Durata (min)',
-  'adminServices.descDe': 'Descrizione (DE)',
-  'adminServices.descEn': 'Descrizione (EN)',
+  'adminServices.description': 'Descrizione',
   'adminServices.save': 'Salva',
   'adminServices.archive': 'Archivia',
   'adminServices.reactivate': 'Riattiva',
@@ -940,8 +939,7 @@ const es: Record<TranslationKey, string> = {
   'adminTherapists.firstName': 'Nombre',
   'adminTherapists.lastName': 'Apellido',
   'adminTherapists.titleLabel': 'Título',
-  'adminTherapists.roleDe': 'Rol (DE)',
-  'adminTherapists.roleEn': 'Rol (EN)',
+  'adminTherapists.role': 'Rol',
   'adminTherapists.photoUrl': 'Ruta de la foto',
   'adminTherapists.activeFrom': 'Activo desde',
   'adminTherapists.activeUntil': 'Activo hasta',
@@ -1000,8 +998,7 @@ const es: Record<TranslationKey, string> = {
   'adminServices.add': 'Crear prestación',
   'adminServices.name': 'Nombre',
   'adminServices.duration': 'Duración (min)',
-  'adminServices.descDe': 'Descripción (DE)',
-  'adminServices.descEn': 'Descripción (EN)',
+  'adminServices.description': 'Descripción',
   'adminServices.save': 'Guardar',
   'adminServices.archive': 'Archivar',
   'adminServices.reactivate': 'Reactivar',

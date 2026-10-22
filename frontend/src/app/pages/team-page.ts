@@ -27,11 +27,11 @@ import { I18nService } from '../i18n/i18n.service';
                 <span class="team-title">{{ member.title }}</span>
               }
             </h2>
-            <p class="team-role">{{ i18n.pick(member.roleDe, member.roleEn) }}</p>
+            <p class="team-role">{{ i18n.pick(member.role) }}</p>
             @if (member.qualifications.length > 0) {
               <ul class="team-quals" [attr.aria-label]="i18n.t('team.qualifications')">
-                @for (q of member.qualifications; track q.nameDe) {
-                  <li class="team-qual">{{ i18n.pick(q.nameDe, q.nameEn) }}</li>
+                @for (q of member.qualifications; track $index) {
+                  <li class="team-qual">{{ i18n.pick(q.name) }}</li>
                 }
               </ul>
             }

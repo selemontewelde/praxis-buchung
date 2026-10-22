@@ -15,14 +15,12 @@
       <span>{{ i18n.t('adminTherapists.titleLabel') }}</span>
       <input [value]="titleField()" (input)="set(titleField, $event)" />
     </label>
-    <label>
-      <span>{{ i18n.t('adminTherapists.roleDe') }}</span>
-      <input [value]="roleDe()" (input)="set(roleDe, $event)" />
-    </label>
-    <label>
-      <span>{{ i18n.t('adminTherapists.roleEn') }}</span>
-      <input [value]="roleEn()" (input)="set(roleEn, $event)" />
-    </label>
+    @for (lang of i18n.languages; track lang) {
+      <label>
+        <span>{{ i18n.t('adminTherapists.role') }} ({{ i18n.languageLabel(lang) }})</span>
+        <input [value]="role()[lang] ?? ''" (input)="setRole(lang, $any($event.target).value)" />
+      </label>
+    }
     <label>
       <span>{{ i18n.t('adminTherapists.photoUrl') }}</span>
       <input [value]="photoUrl()" (input)="set(photoUrl, $event)" />

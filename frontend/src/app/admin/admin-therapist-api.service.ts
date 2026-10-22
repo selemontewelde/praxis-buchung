@@ -1,14 +1,14 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
+import type { LocalizedText } from '../i18n/translations';
 
 export interface AdminTherapist {
   id: string;
   firstName: string;
   lastName: string;
   title: string | null;
-  roleDe: string | null;
-  roleEn: string | null;
+  role: LocalizedText | null;
   photoUrl: string | null;
   activeFrom: string;
   activeUntil: string | null;
@@ -19,8 +19,7 @@ export interface CreateTherapistPayload {
   firstName: string;
   lastName: string;
   title?: string;
-  roleDe: string;
-  roleEn: string;
+  role: LocalizedText;
   photoUrl?: string;
   activeFrom: string;
   activeUntil?: string;

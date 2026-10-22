@@ -16,7 +16,7 @@ import { I18nService } from '../i18n/i18n.service';
             >
           </div>
           <p class="service-desc">
-            {{ i18n.pick(service.descriptionDe, service.descriptionEn) }}
+            {{ i18n.pick(service.description) }}
           </p>
         </li>
       }

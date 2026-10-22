@@ -18,6 +18,42 @@ BACKUP_HOUR="${BACKUP_HOUR:-3}"
 BACKUP_HOUR="${BACKUP_HOUR#0}"
 BACKUP_HOUR="${BACKUP_HOUR:-0}"
 
+# Off-site replication. When RESTIC_REPOSITORY is set, push the dumps to an
+# encrypted, deduplicated restic repository (object storage, SFTP, ...) and prune
+# it to the same retention window as the local dumps. restic encrypts every
+# snapshot with RESTIC_PASSWORD, so the off-site copy is encrypted at rest.
+#
+# Dormant until configured, and never fatal: a failed off-site copy must not fail
+# the local backup or a pre-deploy run, so the caller swallows a non-zero return.
+# restic is installed lazily (only when off-site is actually enabled), keeping the
+# default, un-configured path dependency-free.
+replicate_offsite() {
+  [ -n "${RESTIC_REPOSITORY:-}" ] || return 0
+
+  if [ -z "${RESTIC_PASSWORD:-}" ]; then
+    echo "[backup] RESTIC_REPOSITORY set but RESTIC_PASSWORD missing; skipping off-site" >&2
+    return 1
+  fi
+
+  if ! command -v restic >/dev/null 2>&1; then
+    echo "[backup] installing restic for off-site replication"
+    apk add --no-cache restic >/dev/null 2>&1 ||
+      { echo "[backup] could not install restic" >&2; return 1; }
+  fi
+
+  # Create the repository on first use (restic init is a no-op once it exists).
+  if ! restic cat config >/dev/null 2>&1; then
+    echo "[backup] initialising restic repository"
+    restic init || { echo "[backup] restic init failed" >&2; return 1; }
+  fi
+
+  echo "[backup] replicating $BACKUP_DIR off-site"
+  restic backup "$BACKUP_DIR" || { echo "[backup] restic backup failed" >&2; return 1; }
+  # Same retention window as the local dumps.
+  restic forget --keep-within "${RETENTION_DAYS}d" --prune ||
+    echo "[backup] restic prune failed (non-fatal)" >&2
+}
+
 run_backup() {
   mkdir -p "$BACKUP_DIR"
   ts=$(date +%Y%m%d-%H%M%S)
@@ -35,6 +71,8 @@ run_backup() {
   fi
   # Retention: drop gzipped dumps older than RETENTION_DAYS.
   find "$BACKUP_DIR" -name 'backup-*.sql.gz' -type f -mtime +"$RETENTION_DAYS" -delete
+  # Off-site copy after the local dump is in place; non-fatal by design.
+  replicate_offsite || echo "[backup] off-site replication failed (non-fatal)" >&2
 }
 
 # Seconds from now until the next BACKUP_HOUR:00 in the container's local time.

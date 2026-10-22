@@ -215,11 +215,31 @@ once a day and keeps the recent dumps:
 - **When / retention:** daily at `BACKUP_HOUR` (default `03:00`, in `TZ`), keeping
   `BACKUP_RETENTION_DAYS` days (default `7`). See `infra/.env.prod.example`.
 - **On demand:** `docker compose -f compose.prod.yml exec backup sh /backup.sh once`.
-- Copy `./backups/` **offsite** periodically (e.g. `scp` or object storage) — the
+- **Off-site:** optionally replicated to encrypted object storage — see below. The
   on-server copy alone does not survive losing the server.
 - **Dumps contain personal data** (patient names and contact details). Under the
-  revDSG, keep them access-controlled and encrypted at rest, and delete offsite
+  revDSG, keep them access-controlled and encrypted at rest, and delete off-site
   copies on the same retention schedule.
+
+### Off-site replication (restic)
+
+The on-server dumps are lost with the server, so the `backup` service can also
+replicate them off-site. It is **dormant until configured**: set `RESTIC_REPOSITORY`
+(and `RESTIC_PASSWORD` plus backend credentials) in `.env` and the daily job pushes
+`./backups/` to a [restic](https://restic.net/) repository after each dump. See
+`infra/.env.prod.example` and [ADR-0014](docs/adr/0014-off-site-backups-restic.md).
+
+- **Encrypted at rest:** restic encrypts every snapshot with `RESTIC_PASSWORD`, so
+  the off-site copy satisfies the revDSG requirement without extra tooling. Store
+  the passphrase safely and separately — losing it makes the off-site backups
+  unrecoverable.
+- **Retention:** pruned to the same `BACKUP_RETENTION_DAYS` window as the local
+  dumps (`restic forget --keep-within`).
+- **Backends:** any restic backend — S3-compatible object storage (AWS S3,
+  Backblaze B2, MinIO) via `AWS_ACCESS_KEY_ID`/`AWS_SECRET_ACCESS_KEY`, or SFTP to
+  a second host.
+- **Non-fatal:** a failed off-site copy is logged but never fails the local backup
+  or a deploy; `restic` installs itself in the container on first use.
 
 ### Restore a backup
 
@@ -247,6 +267,14 @@ docker compose -f compose.prod.yml up -d
 ```
 
 To inspect a dump without restoring: `gunzip -c backups/backup-<timestamp>.sql.gz | less`.
+
+If the server (and its `./backups/`) is gone, first fetch the latest dump from the
+off-site repository, then restore it with the steps above:
+
+```bash
+# With RESTIC_REPOSITORY / RESTIC_PASSWORD (and backend creds) exported:
+restic restore latest --target . --include /backups
+```
 
 ## Deployment
 

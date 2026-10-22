@@ -17,6 +17,7 @@ export interface AdminSection {
  */
 export const ADMIN_SECTIONS: readonly AdminSection[] = [
   { link: '/admin/therapists', key: 'adminTherapists.nav', adminOnly: true },
+  { link: '/admin/users', key: 'adminUsers.nav', adminOnly: true },
   { link: '/admin/hours', key: 'adminHours.nav' },
   { link: '/admin/blocks', key: 'adminBlocks.nav' },
   { link: '/admin/services', key: 'adminServices.nav', adminOnly: true },

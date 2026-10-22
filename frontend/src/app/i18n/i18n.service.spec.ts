@@ -41,12 +41,27 @@ describe('I18nService', () => {
     expect(i18n.t('does.not.exist' as TranslationKey)).toBe('does.not.exist');
   });
 
-  it('picks a bilingual value for the current language, German as fallback', () => {
+  it('picks the active language from a localized map', () => {
     const i18n = TestBed.inject(I18nService);
-    expect(i18n.pick('DE', 'EN')).toBe('DE');
+    const text = { de: 'DE', en: 'EN', fr: 'FR' };
+    expect(i18n.pick(text)).toBe('DE');
     i18n.setLanguage('en');
-    expect(i18n.pick('DE', 'EN')).toBe('EN');
-    expect(i18n.pick('DE', null)).toBe('DE');
+    expect(i18n.pick(text)).toBe('EN');
+    i18n.setLanguage('fr');
+    expect(i18n.pick(text)).toBe('FR');
+  });
+
+  it('falls back active → de → en → first set, and handles null', () => {
+    const i18n = TestBed.inject(I18nService);
+    i18n.setLanguage('it');
+    // Active (it) missing → German.
+    expect(i18n.pick({ de: 'DE', en: 'EN' })).toBe('DE');
+    // Active + German missing → English.
+    expect(i18n.pick({ en: 'EN' })).toBe('EN');
+    // Only an optional locale present → first set value.
+    expect(i18n.pick({ es: 'ES' })).toBe('ES');
+    expect(i18n.pick(null)).toBe('');
+    expect(i18n.pick(undefined)).toBe('');
   });
 
   it('remembers the chosen language across instances', () => {
@@ -67,11 +82,11 @@ describe('I18nService', () => {
     expect(i18n.t('nav.home')).toBe('Inicio');
   });
 
-  it('shows the English DB value for a non-German UI language', () => {
+  it('shows the French DB value when the content provides it', () => {
     const i18n = TestBed.inject(I18nService);
     i18n.setLanguage('fr');
-    // DB content is only DE/EN, so a third language falls back to English.
-    expect(i18n.pick('DE', 'EN')).toBe('EN');
+    // Content now carries fr/it/es, so a French UI shows the French value.
+    expect(i18n.pick({ de: 'DE', en: 'EN', fr: 'FR' })).toBe('FR');
   });
 
   it('remembers any supported language across instances', () => {

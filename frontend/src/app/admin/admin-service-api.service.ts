@@ -1,25 +1,24 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
+import type { LocalizedText } from '../i18n/translations';
 
 export interface AdminService {
   id: string;
   name: string;
   durationMin: number;
-  descriptionDe: string | null;
-  descriptionEn: string | null;
+  description: LocalizedText | null;
   active: boolean;
 }
 
 export interface CreateServicePayload {
   name: string;
   durationMin: number;
-  descriptionDe?: string;
-  descriptionEn?: string;
+  description?: LocalizedText;
 }
 
 export type UpdateServicePayload = Partial<
-  Omit<AdminService, 'id'> & { descriptionDe: string; descriptionEn: string }
+  Omit<AdminService, 'id'> & { description: LocalizedText }
 >;
 
 /** Client for the authenticated /api/admin/services endpoints. */

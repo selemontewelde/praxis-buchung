@@ -1,20 +1,19 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, inject, signal } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
+import type { LocalizedText } from '../i18n/translations';
 
 /** A bookable service as served by GET /api/public/services. */
 export interface PublicService {
   id: string;
   name: string;
   durationMin: number;
-  descriptionDe: string | null;
-  descriptionEn: string | null;
+  description: LocalizedText | null;
 }
 
 /** A credential shown under a team member. */
 export interface PublicQualification {
-  nameDe: string;
-  nameEn: string;
+  name: LocalizedText | null;
 }
 
 /** An active team member as served by GET /api/public/team. */
@@ -23,8 +22,7 @@ export interface PublicTeamMember {
   firstName: string;
   lastName: string;
   title: string | null;
-  roleDe: string | null;
-  roleEn: string | null;
+  role: LocalizedText | null;
   photoUrl: string | null;
   qualifications: PublicQualification[];
 }

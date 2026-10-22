@@ -25,8 +25,7 @@ async function setupComponent() {
       id: 'physio',
       name: 'Physiotherapie',
       durationMin: 30,
-      descriptionDe: null,
-      descriptionEn: null,
+      description: null,
     },
   ]);
   httpMock.expectOne('/api/public/team').flush([
@@ -35,8 +34,7 @@ async function setupComponent() {
       firstName: 'Anna',
       lastName: 'Keller',
       title: null,
-      roleDe: null,
-      roleEn: null,
+      role: null,
       photoUrl: null,
     },
   ]);

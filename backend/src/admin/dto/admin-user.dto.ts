@@ -30,6 +30,14 @@ export class CreateAdminUserDto {
   therapistId?: string;
 }
 
+/** Body for POST /api/admin/users/:id/password (ADMIN resets a user's password). */
+export class ResetPasswordDto {
+  @IsString()
+  @MinLength(8)
+  @MaxLength(100)
+  newPassword!: string;
+}
+
 export class UpdateAdminUserDto {
   @IsOptional()
   @IsEmail()

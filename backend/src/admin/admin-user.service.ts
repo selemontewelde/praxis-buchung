@@ -92,6 +92,22 @@ export class AdminUserService {
     });
   }
 
+  /**
+   * ADMIN resets another user's password (no current-password check). All of that
+   * user's sessions are revoked, forcing a fresh login with the new password.
+   */
+  async resetPassword(id: string, newPassword: string): Promise<void> {
+    const user = await this.prisma.adminUser.findUnique({ where: { id } });
+    if (user === null) {
+      throw new NotFoundException(`Unknown user: ${id}`);
+    }
+    const passwordHash = await hash(newPassword);
+    await this.prisma.$transaction([
+      this.prisma.adminUser.update({ where: { id }, data: { passwordHash } }),
+      this.prisma.session.deleteMany({ where: { adminUserId: id } }),
+    ]);
+  }
+
   async remove(id: string, currentUserId: string): Promise<void> {
     if (id === currentUserId) {
       throw new ForbiddenException('You cannot delete your own login');

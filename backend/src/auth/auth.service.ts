@@ -1,6 +1,6 @@
 import { createHash, randomBytes } from 'node:crypto';
 import { Injectable, UnauthorizedException } from '@nestjs/common';
-import { verify } from '@node-rs/argon2';
+import { hash, verify } from '@node-rs/argon2';
 import { PrismaService } from '../prisma/prisma.service.js';
 
 /** Name of the HTTP-only session cookie. */
@@ -60,6 +60,33 @@ export class AuthService {
 
   async logout(token: string): Promise<void> {
     await this.prisma.session.deleteMany({ where: { token: hashToken(token) } });
+  }
+
+  /**
+   * Change the caller's own password after verifying the current one. Revokes the
+   * user's OTHER sessions (keeps the current one, identified by its token) so a
+   * password change invalidates any other logged-in device.
+   */
+  async changeOwnPassword(
+    userId: string,
+    currentPassword: string,
+    newPassword: string,
+    currentToken: string,
+  ): Promise<void> {
+    const user = await this.prisma.adminUser.findUnique({
+      where: { id: userId },
+    });
+    if (user === null || !(await verify(user.passwordHash, currentPassword))) {
+      throw new UnauthorizedException('Current password is incorrect');
+    }
+    const passwordHash = await hash(newPassword);
+    await this.prisma.adminUser.update({
+      where: { id: userId },
+      data: { passwordHash },
+    });
+    await this.prisma.session.deleteMany({
+      where: { adminUserId: userId, NOT: { token: hashToken(currentToken) } },
+    });
   }
 
   async validate(

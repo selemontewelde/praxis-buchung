@@ -44,4 +44,12 @@ export class AdminUserApiService {
   remove(id: string): Promise<{ ok: true }> {
     return firstValueFrom(this.http.delete<{ ok: true }>(`/api/admin/users/${id}`));
   }
+
+  resetPassword(id: string, newPassword: string): Promise<{ ok: true }> {
+    return firstValueFrom(
+      this.http.post<{ ok: true }>(`/api/admin/users/${id}/password`, {
+        newPassword,
+      }),
+    );
+  }
 }

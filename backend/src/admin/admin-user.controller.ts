@@ -16,6 +16,7 @@ import { SessionAuthGuard } from '../auth/session-auth.guard.js';
 import { type AdminUserView, AdminUserService } from './admin-user.service.js';
 import {
   CreateAdminUserDto,
+  ResetPasswordDto,
   UpdateAdminUserDto,
 } from './dto/admin-user.dto.js';
 
@@ -42,6 +43,15 @@ export class AdminUserController {
     @Body() dto: UpdateAdminUserDto,
   ): Promise<{ ok: true }> {
     await this.users.update(id, dto);
+    return { ok: true };
+  }
+
+  @Post(':id/password')
+  async resetPassword(
+    @Param('id') id: string,
+    @Body() dto: ResetPasswordDto,
+  ): Promise<{ ok: true }> {
+    await this.users.resetPassword(id, dto.newPassword);
     return { ok: true };
   }
 

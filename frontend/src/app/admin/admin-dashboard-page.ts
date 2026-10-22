@@ -1,4 +1,4 @@
-import { Component, computed, inject } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { I18nService } from '../i18n/i18n.service';
 import { AdminAuthService } from './admin-auth.service';
@@ -20,6 +20,25 @@ import { visibleSections } from './admin-sections';
         }}</a>
       }
     </nav>
+
+    <section class="password">
+      <h2>{{ i18n.t('adminPassword.title') }}</h2>
+      <form (submit)="$event.preventDefault(); changePassword()">
+        <label>
+          <span>{{ i18n.t('adminPassword.current') }}</span>
+          <input type="password" [value]="current()" (input)="current.set($any($event.target).value)" />
+        </label>
+        <label>
+          <span>{{ i18n.t('adminPassword.new') }}</span>
+          <input type="password" [value]="next()" (input)="next.set($any($event.target).value)" />
+        </label>
+        <button type="submit" [disabled]="current() === '' || next() === ''">
+          {{ i18n.t('adminPassword.submit') }}
+        </button>
+      </form>
+      @if (notice(); as n) { <p class="notice">{{ n }}</p> }
+      @if (error(); as e) { <p class="error">{{ e }}</p> }
+    </section>
   `,
   styles: `
     .who {
@@ -54,6 +73,45 @@ import { visibleSections } from './admin-sections';
         transform: translateY(-2px);
       }
     }
+    .password {
+      margin-top: 2rem;
+    }
+    .password form {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      align-items: end;
+    }
+    .password label {
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+    }
+    .password input {
+      padding: 0.35rem 0.5rem;
+      border: 1px solid var(--color-border);
+      border-radius: 6px;
+      font: inherit;
+    }
+    .password button {
+      background: var(--color-primary);
+      color: #fff;
+      border: 0;
+      border-radius: 999px;
+      padding: 0.35rem 0.9rem;
+      font: inherit;
+      cursor: pointer;
+    }
+    .password button[disabled] {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+    .notice {
+      color: var(--color-primary);
+    }
+    .error {
+      color: #b91c1c;
+    }
   `,
 })
 export class AdminDashboardPage {
@@ -62,4 +120,23 @@ export class AdminDashboardPage {
   protected readonly sections = computed(() =>
     visibleSections(this.auth.admin()?.role ?? 'THERAPIST'),
   );
+
+  protected readonly current = signal('');
+  protected readonly next = signal('');
+  protected readonly notice = signal<string | null>(null);
+  protected readonly error = signal<string | null>(null);
+
+  protected async changePassword(): Promise<void> {
+    if (this.current() === '' || this.next() === '') return;
+    this.notice.set(null);
+    this.error.set(null);
+    try {
+      await this.auth.changePassword(this.current(), this.next());
+      this.current.set('');
+      this.next.set('');
+      this.notice.set(this.i18n.t('adminPassword.changed'));
+    } catch {
+      this.error.set(this.i18n.t('adminPassword.error'));
+    }
+  }
 }

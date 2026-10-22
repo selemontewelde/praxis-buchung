@@ -35,6 +35,16 @@ export class AdminAuthService {
     this.loaded = true;
   }
 
+  /** Change the logged-in user's own password (verifies the current one). */
+  async changePassword(
+    currentPassword: string,
+    newPassword: string,
+  ): Promise<void> {
+    await firstValueFrom(
+      this.http.post('/api/admin/password', { currentPassword, newPassword }),
+    );
+  }
+
   async logout(): Promise<void> {
     try {
       await firstValueFrom(this.http.post('/api/admin/logout', {}));

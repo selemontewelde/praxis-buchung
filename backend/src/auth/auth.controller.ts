@@ -9,7 +9,10 @@ import {
 } from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
 import type { CookieOptions, Request, Response } from 'express';
+import { type AuthenticatedAdmin } from './auth.service.js';
 import { AuthService, SESSION_COOKIE } from './auth.service.js';
+import { CurrentAdmin } from './current-admin.decorator.js';
+import { ChangePasswordDto } from './dto/change-password.dto.js';
 import { LoginDto } from './dto/login.dto.js';
 import {
   type RequestWithAdmin,
@@ -54,6 +57,28 @@ export class AuthController {
       await this.auth.logout(token);
     }
     res.clearCookie(SESSION_COOKIE, cookieOptions());
+    return { ok: true };
+  }
+
+  // Change your own password (any authenticated role). Verifies the current one;
+  // other sessions are revoked by the service.
+  @Post('password')
+  @UseGuards(SessionAuthGuard)
+  async changePassword(
+    @Body() dto: ChangePasswordDto,
+    @Req() req: Request,
+    @CurrentAdmin() admin: AuthenticatedAdmin,
+  ): Promise<{ ok: true }> {
+    const cookies = req.cookies as Record<string, string> | undefined;
+    // SessionAuthGuard already required a valid session cookie to reach here, so
+    // the token is present; `?? ''` is only a type-safety fallback.
+    const token = cookies?.[SESSION_COOKIE] ?? '';
+    await this.auth.changeOwnPassword(
+      admin.id,
+      dto.currentPassword,
+      dto.newPassword,
+      token,
+    );
     return { ok: true };
   }
 

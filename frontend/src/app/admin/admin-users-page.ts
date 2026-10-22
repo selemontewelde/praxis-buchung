@@ -56,6 +56,9 @@ const ROLES: AdminRole[] = ['ADMIN', 'THERAPIST'];
     @if (error(); as e) {
       <p class="error">{{ e }}</p>
     }
+    @if (notice(); as n) {
+      <p class="notice">{{ n }}</p>
+    }
 
     <ul class="user-list">
       @for (u of users(); track u.id) {
@@ -77,6 +80,20 @@ const ROLES: AdminRole[] = ['ADMIN', 'THERAPIST'];
               }
             </select>
           }
+          <input
+            class="reset-pw"
+            type="password"
+            [placeholder]="i18n.t('adminUsers.newPassword')"
+            [value]="resetPw()[u.id] ?? ''"
+            (input)="setResetPw(u.id, $any($event.target).value)"
+          />
+          <button
+            type="button"
+            [disabled]="(resetPw()[u.id] ?? '') === ''"
+            (click)="resetPassword(u)"
+          >
+            {{ i18n.t('adminUsers.resetPassword') }}
+          </button>
           <button type="button" class="delete" (click)="remove(u)">
             {{ i18n.t('adminUsers.delete') }}
           </button>
@@ -120,6 +137,12 @@ const ROLES: AdminRole[] = ['ADMIN', 'THERAPIST'];
     .error {
       color: #b91c1c;
     }
+    .notice {
+      color: var(--color-primary);
+    }
+    .reset-pw {
+      max-width: 11rem;
+    }
     .user-list {
       list-style: none;
       padding: 0;
@@ -160,6 +183,9 @@ export class AdminUsersPage {
   protected readonly role = signal<AdminRole>('ADMIN');
   protected readonly newTherapist = signal('');
   protected readonly error = signal<string | null>(null);
+  protected readonly notice = signal<string | null>(null);
+  // Per-row new-password input for an ADMIN reset, keyed by user id.
+  protected readonly resetPw = signal<Record<string, string>>({});
 
   constructor() {
     void this.init();
@@ -213,6 +239,24 @@ export class AdminUsersPage {
     );
   }
 
+  protected setResetPw(id: string, value: string): void {
+    this.resetPw.update((map) => ({ ...map, [id]: value }));
+  }
+
+  protected async resetPassword(user: AdminUser): Promise<void> {
+    const password = this.resetPw()[user.id] ?? '';
+    if (password === '') return;
+    this.error.set(null);
+    this.notice.set(null);
+    try {
+      await this.api.resetPassword(user.id, password);
+      this.setResetPw(user.id, '');
+      this.notice.set(this.i18n.t('adminUsers.passwordReset'));
+    } catch (err: unknown) {
+      this.error.set(this.messageOf(err));
+    }
+  }
+
   protected async remove(user: AdminUser): Promise<void> {
     await this.run(() => this.api.remove(user.id));
   }
@@ -220,6 +264,7 @@ export class AdminUsersPage {
   /** Run a mutation, surface a backend error message inline, and reload. */
   private async run(action: () => Promise<unknown>): Promise<void> {
     this.error.set(null);
+    this.notice.set(null);
     try {
       await action();
     } catch (err: unknown) {

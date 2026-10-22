@@ -1,5 +1,6 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { I18nService } from '../i18n/i18n.service';
+import { AdminAuthService } from './admin-auth.service';
 import {
   AdminHoursApiService,
   type HoursWindow,
@@ -25,6 +26,13 @@ export class AdminHoursPage {
   protected readonly i18n = inject(I18nService);
   private readonly api = inject(AdminHoursApiService);
   private readonly therapistApi = inject(AdminTherapistApiService);
+  private readonly auth = inject(AdminAuthService);
+
+  // Only an ADMIN edits practice opening hours and picks a therapist; a THERAPIST
+  // edits just their own working hours.
+  protected readonly isAdmin = computed(
+    () => this.auth.admin()?.role === 'ADMIN',
+  );
 
   protected readonly weekdays = WEEKDAYS;
   protected readonly therapists = signal<{ id: string; name: string }[]>([]);
@@ -40,11 +48,19 @@ export class AdminHoursPage {
   }
 
   private async init(): Promise<void> {
-    this.opening.set(await this.api.getOpening());
-    const list = await this.therapistApi.list();
-    this.therapists.set(
-      list.map((t) => ({ id: t.id, name: `${t.firstName} ${t.lastName}` })),
-    );
+    const identity = this.auth.admin();
+    if (identity?.role === 'ADMIN') {
+      this.opening.set(await this.api.getOpening());
+      const list = await this.therapistApi.list();
+      this.therapists.set(
+        list.map((t) => ({ id: t.id, name: `${t.firstName} ${t.lastName}` })),
+      );
+    } else if (identity !== null && identity.therapistId !== null) {
+      // THERAPIST: edit only their own working hours — no practice opening hours,
+      // no therapist list (that endpoint is ADMIN-only).
+      this.selectedTherapist.set(identity.therapistId);
+      this.working.set(await this.api.getWorking(identity.therapistId));
+    }
   }
 
   protected toTime(min: number): string {

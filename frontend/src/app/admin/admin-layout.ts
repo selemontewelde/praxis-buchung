@@ -1,9 +1,9 @@
-import { Component, effect, inject, OnDestroy } from '@angular/core';
+import { Component, computed, effect, inject, OnDestroy } from '@angular/core';
 import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { PracticeService } from '../core/practice.service';
 import { I18nService } from '../i18n/i18n.service';
 import { AdminAuthService } from './admin-auth.service';
-import { ADMIN_SECTIONS } from './admin-sections';
+import { visibleSections } from './admin-sections';
 import { AdminThemeService } from './admin-theme.service';
 
 /**
@@ -34,7 +34,7 @@ import { AdminThemeService } from './admin-theme.service';
             [routerLinkActiveOptions]="{ exact: true }"
             >{{ i18n.t('admin.nav.overview') }}</a
           >
-          @for (section of sections; track section.link) {
+          @for (section of sections(); track section.link) {
             <a [routerLink]="section.link" routerLinkActive="active">{{
               i18n.t(section.key)
             }}</a>
@@ -157,7 +157,11 @@ export class AdminLayout implements OnDestroy {
   protected readonly practice = inject(PracticeService);
   protected readonly auth = inject(AdminAuthService);
   protected readonly theme = inject(AdminThemeService);
-  protected readonly sections = ADMIN_SECTIONS;
+  // Role-aware: a THERAPIST sees only the sections for their own data. Falls back
+  // to the restricted set until the identity is known (the guard loads it first).
+  protected readonly sections = computed(() =>
+    visibleSections(this.auth.admin()?.role ?? 'THERAPIST'),
+  );
   private readonly router = inject(Router);
 
   constructor() {

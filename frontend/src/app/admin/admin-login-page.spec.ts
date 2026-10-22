@@ -43,6 +43,11 @@ describe('AdminLoginPage', () => {
 
     const done = cmp.submit();
     httpMock.expectOne('/api/admin/login').flush({ email: 'a@b.c' });
+    // login() then fetches the full identity from /me (dispatched next tick).
+    await new Promise((resolve) => setTimeout(resolve));
+    httpMock
+      .expectOne('/api/admin/me')
+      .flush({ email: 'a@b.c', role: 'ADMIN', therapistId: null });
     await done;
 
     expect(navigateByUrl).toHaveBeenCalledWith('/admin');

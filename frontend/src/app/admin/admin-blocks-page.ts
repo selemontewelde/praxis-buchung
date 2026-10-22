@@ -1,5 +1,6 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { I18nService } from '../i18n/i18n.service';
+import { AdminAuthService } from './admin-auth.service';
 import {
   type AdminBlock,
   AdminBlocksApiService,
@@ -14,15 +15,17 @@ const REASONS = ['VACATION', 'TRAINING', 'SICK', 'OTHER'];
     <h1>{{ i18n.t('adminBlocks.title') }}</h1>
 
     <form class="add" (submit)="$event.preventDefault(); create()">
-      <label>
-        <span>{{ i18n.t('adminBlocks.therapist') }}</span>
-        <select [value]="therapistId()" (change)="therapistId.set($any($event.target).value)">
-          <option value="">—</option>
-          @for (t of therapists(); track t.id) {
-            <option [value]="t.id">{{ t.name }}</option>
-          }
-        </select>
-      </label>
+      @if (isAdmin()) {
+        <label>
+          <span>{{ i18n.t('adminBlocks.therapist') }}</span>
+          <select [value]="therapistId()" (change)="therapistId.set($any($event.target).value)">
+            <option value="">—</option>
+            @for (t of therapists(); track t.id) {
+              <option [value]="t.id">{{ t.name }}</option>
+            }
+          </select>
+        </label>
+      }
       <label>
         <span>{{ i18n.t('adminBlocks.reason') }}</span>
         <select [value]="reason()" (change)="reason.set($any($event.target).value)">
@@ -79,6 +82,13 @@ export class AdminBlocksPage {
   protected readonly i18n = inject(I18nService);
   private readonly api = inject(AdminBlocksApiService);
   private readonly therapistApi = inject(AdminTherapistApiService);
+  private readonly auth = inject(AdminAuthService);
+
+  // A THERAPIST creates blocks only for themselves (therapist pre-set, picker
+  // hidden); an ADMIN picks any therapist.
+  protected readonly isAdmin = computed(
+    () => this.auth.admin()?.role === 'ADMIN',
+  );
 
   protected readonly reasons = REASONS;
   protected readonly blocks = signal<AdminBlock[]>([]);
@@ -95,10 +105,16 @@ export class AdminBlocksPage {
   }
 
   private async init(): Promise<void> {
-    const list = await this.therapistApi.list();
-    this.therapists.set(
-      list.map((t) => ({ id: t.id, name: `${t.firstName} ${t.lastName}` })),
-    );
+    const identity = this.auth.admin();
+    if (identity?.role === 'ADMIN') {
+      const list = await this.therapistApi.list();
+      this.therapists.set(
+        list.map((t) => ({ id: t.id, name: `${t.firstName} ${t.lastName}` })),
+      );
+    } else if (identity !== null && identity.therapistId !== null) {
+      // THERAPIST: new blocks are for themselves; skip the ADMIN-only list.
+      this.therapistId.set(identity.therapistId);
+    }
     await this.reload();
   }
 

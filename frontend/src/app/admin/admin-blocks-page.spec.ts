@@ -3,23 +3,32 @@ import {
   HttpTestingController,
   provideHttpClientTesting,
 } from '@angular/common/http/testing';
+import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
+import { type AdminIdentity, AdminAuthService } from './admin-auth.service';
 import { AdminBlocksPage } from './admin-blocks-page';
 
 describe('AdminBlocksPage', () => {
+  const adminSig = signal<AdminIdentity | null>(null);
+
   beforeEach(() => {
     try {
       localStorage.clear();
     } catch {
       // ignore
     }
+    adminSig.set({ email: 'a@b.c', role: 'ADMIN', therapistId: null });
     TestBed.configureTestingModule({
       imports: [AdminBlocksPage],
-      providers: [provideHttpClient(), provideHttpClientTesting()],
+      providers: [
+        provideHttpClient(),
+        provideHttpClientTesting(),
+        { provide: AdminAuthService, useValue: { admin: adminSig.asReadonly() } },
+      ],
     });
   });
 
-  it('lists upcoming blocks', async () => {
+  it('lists upcoming blocks (ADMIN: with the therapist list)', async () => {
     const fixture = TestBed.createComponent(AdminBlocksPage);
     const httpMock = TestBed.inject(HttpTestingController);
 

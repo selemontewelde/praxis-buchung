@@ -1,5 +1,6 @@
 <h1>{{ i18n.t('adminHours.title') }}</h1>
 
+@if (isAdmin()) {
 <section class="hours">
   <h2>{{ i18n.t('adminHours.opening') }}</h2>
   @for (w of opening(); track $index) {
@@ -24,18 +25,21 @@
     @if (openingStatus(); as status) { <span class="status">{{ status }}</span> }
   </div>
 </section>
+}
 
 <section class="hours">
   <h2>{{ i18n.t('adminHours.working') }}</h2>
-  <label>
-    <span>{{ i18n.t('adminHours.selectTherapist') }}</span>
-    <select [value]="selectedTherapist()" (change)="selectTherapist($event)">
-      <option value="">—</option>
-      @for (t of therapists(); track t.id) {
-        <option [value]="t.id">{{ t.name }}</option>
-      }
-    </select>
-  </label>
+  @if (isAdmin()) {
+    <label>
+      <span>{{ i18n.t('adminHours.selectTherapist') }}</span>
+      <select [value]="selectedTherapist()" (change)="selectTherapist($event)">
+        <option value="">—</option>
+        @for (t of therapists(); track t.id) {
+          <option [value]="t.id">{{ t.name }}</option>
+        }
+      </select>
+    </label>
+  }
 
   @if (selectedTherapist() !== '') {
     @for (w of working(); track $index) {

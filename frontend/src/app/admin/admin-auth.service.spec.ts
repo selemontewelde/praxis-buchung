@@ -20,19 +20,28 @@ describe('AdminAuthService', () => {
 
   afterEach(() => httpMock.verify());
 
-  it('sets the admin on login', async () => {
+  const identity = {
+    email: 'a@b.c',
+    role: 'ADMIN' as const,
+    therapistId: null,
+  };
+
+  it('sets the admin on login (fetching the full identity from /me)', async () => {
     const p = service.login('a@b.c', 'pw');
     const req = httpMock.expectOne('/api/admin/login');
     expect(req.request.body).toEqual({ email: 'a@b.c', password: 'pw' });
     req.flush({ email: 'a@b.c' });
+    // The GET /me is dispatched after the login POST resolves (next tick).
+    await new Promise((resolve) => setTimeout(resolve));
+    httpMock.expectOne('/api/admin/me').flush(identity);
     await p;
-    expect(service.admin()).toEqual({ email: 'a@b.c' });
+    expect(service.admin()).toEqual(identity);
   });
 
   it('ensureLoaded queries /me once and caches', async () => {
     const p = service.ensureLoaded();
-    httpMock.expectOne('/api/admin/me').flush({ email: 'a@b.c' });
-    expect(await p).toEqual({ email: 'a@b.c' });
+    httpMock.expectOne('/api/admin/me').flush(identity);
+    expect(await p).toEqual(identity);
 
     await service.ensureLoaded();
     httpMock.expectNone('/api/admin/me');
@@ -50,6 +59,8 @@ describe('AdminAuthService', () => {
   it('clears the admin on logout', async () => {
     const login = service.login('a@b.c', 'pw');
     httpMock.expectOne('/api/admin/login').flush({ email: 'a@b.c' });
+    await new Promise((resolve) => setTimeout(resolve));
+    httpMock.expectOne('/api/admin/me').flush(identity);
     await login;
 
     const out = service.logout();

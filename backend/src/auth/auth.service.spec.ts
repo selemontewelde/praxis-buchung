@@ -1,8 +1,11 @@
 import { UnauthorizedException } from '@nestjs/common';
 import { describe, expect, it, vi } from 'vitest';
 
-const { verify } = vi.hoisted(() => ({ verify: vi.fn() }));
-vi.mock('@node-rs/argon2', () => ({ verify }));
+const { verify, hash } = vi.hoisted(() => ({
+  verify: vi.fn(),
+  hash: vi.fn().mockResolvedValue('dummy-hash'),
+}));
+vi.mock('@node-rs/argon2', () => ({ verify, hash }));
 
 const { AuthService } = await import('./auth.service.js');
 type PrismaLike = ConstructorParameters<typeof AuthService>[0];
@@ -53,13 +56,19 @@ describe('AuthService', () => {
     ).rejects.toBeInstanceOf(UnauthorizedException);
   });
 
-  it('rejects an unknown email without checking a hash', async () => {
+  it('rejects an unknown email but still runs a verify (constant work)', async () => {
+    // Guards against user-enumeration timing (#133): a missing email must do the
+    // same argon2 work as a real one, so response time can't reveal which emails
+    // exist. We verify against a fixed dummy hash instead of short-circuiting.
     verify.mockClear();
+    verify.mockResolvedValue(false);
     const { prisma } = makePrisma({ admin: null });
     await expect(
       new AuthService(prisma).login('nobody@b.c', 'pw', NOW),
     ).rejects.toBeInstanceOf(UnauthorizedException);
-    expect(verify).not.toHaveBeenCalled();
+    expect(verify).toHaveBeenCalledTimes(1);
+    // The verify runs against the dummy hash, not a real one.
+    expect(verify).toHaveBeenCalledWith('dummy-hash', 'pw');
   });
 
   it('validates a live session and rejects an expired one', async () => {

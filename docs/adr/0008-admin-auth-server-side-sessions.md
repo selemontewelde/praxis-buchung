@@ -47,6 +47,8 @@ state there that then can't be changed server-side.
   the admin UI moves away from a custom `fetch`/XHR JSON client.
 - Expired sessions are pruned lazily (on access); there is no sweeper job. For a
   small session table that is fine; a scheduled cleanup can be added later.
-- The login check does a real argon2 verify only when the user exists, so a
-  missing user returns slightly faster — a minor timing signal, accepted for a
-  single-practice admin (noted in the code).
+- The login check runs an argon2 verify on every attempt — against the real hash,
+  or a fixed memoized dummy hash when the email is unknown — so response time does
+  not reveal whether an email exists (closed the user-enumeration timing signal in
+  #133). Only the very first unknown-email request after start-up also computes the
+  dummy hash, a one-time cold-start cost, not a repeatable oracle.

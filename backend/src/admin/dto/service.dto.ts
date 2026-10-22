@@ -1,3 +1,4 @@
+import { Type } from 'class-transformer';
 import {
   IsBoolean,
   IsInt,
@@ -5,7 +6,9 @@ import {
   IsString,
   Min,
   MinLength,
+  ValidateNested,
 } from 'class-validator';
+import { LocalizedTextDto } from './localized-text.dto.js';
 
 export class CreateServiceDto {
   @IsString()
@@ -17,12 +20,9 @@ export class CreateServiceDto {
   durationMin!: number;
 
   @IsOptional()
-  @IsString()
-  descriptionDe?: string;
-
-  @IsOptional()
-  @IsString()
-  descriptionEn?: string;
+  @ValidateNested()
+  @Type(() => LocalizedTextDto)
+  description?: LocalizedTextDto;
 }
 
 export class UpdateServiceDto {
@@ -37,12 +37,9 @@ export class UpdateServiceDto {
   durationMin?: number;
 
   @IsOptional()
-  @IsString()
-  descriptionDe?: string;
-
-  @IsOptional()
-  @IsString()
-  descriptionEn?: string;
+  @ValidateNested()
+  @Type(() => LocalizedTextDto)
+  description?: LocalizedTextDto;
 
   /** false archives the service (hidden from the public + booking). */
   @IsOptional()

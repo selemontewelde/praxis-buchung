@@ -1,6 +1,7 @@
 import { hash } from '@node-rs/argon2';
 import { PrismaPg } from '@prisma/adapter-pg';
 import { practiceConfig, validatePracticeConfig } from '@praxis-buchung/config';
+import { toJsonInput } from '../src/common/localized-text.js';
 import { PrismaClient } from '../src/generated/prisma/client.js';
 
 /**
@@ -45,8 +46,7 @@ async function main(): Promise<void> {
 
       for (const qualification of seed.qualifications) {
         const data = {
-          nameDe: qualification.nameDe,
-          nameEn: qualification.nameEn,
+          name: toJsonInput(qualification.name),
         };
         await tx.qualification.upsert({
           where: { id: qualification.key },
@@ -59,8 +59,7 @@ async function main(): Promise<void> {
         const data = {
           name: service.name,
           durationMin: service.durationMin,
-          descriptionDe: service.descriptionDe,
-          descriptionEn: service.descriptionEn,
+          description: toJsonInput(service.description),
           roomId: service.room ?? null,
         };
         await tx.service.upsert({
@@ -75,8 +74,7 @@ async function main(): Promise<void> {
           firstName: therapist.firstName,
           lastName: therapist.lastName,
           title: therapist.title ?? null,
-          roleDe: therapist.roleDe,
-          roleEn: therapist.roleEn,
+          role: toJsonInput(therapist.role),
           photoUrl: therapist.photoUrl,
           activeFrom: new Date(therapist.activeFrom),
         };

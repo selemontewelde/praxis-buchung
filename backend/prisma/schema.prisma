@@ -67,8 +67,7 @@ model Therapist {
   firstName   String
   lastName    String
   title       String? // optional professional/academic title, e.g. "PT"
-  roleDe      String? // role shown on the public team page (German)
-  roleEn      String? // role shown on the public team page (English)
+  role        Json? // LocalizedText { de, en, fr?, it?, es? } for the public team page
   photoUrl    String? // path to the portrait in the frontend's served assets
   activeFrom  DateTime  @db.Timestamptz(3) // start of the Active range (UTC)
   activeUntil DateTime? @db.Timestamptz(3) // null = open-ended (still active)
@@ -91,8 +90,7 @@ model Service {
   id            String   @id @default(cuid())
   name          String   @unique
   durationMin   Int // fixed duration in minutes
-  descriptionDe String? // public description shown on the services page (German)
-  descriptionEn String? // public description shown on the services page (English)
+  description   Json? // LocalizedText { de, en, fr?, it?, es? } for the services page
   active        Boolean  @default(true) // archived services (false) are hidden from the public + booking
   // Optional room/equipment this service requires. When set, a slot is only
   // bookable if the room is free as well as the therapist; a removed room sets
@@ -138,8 +136,7 @@ model Capability {
 /// bookings — the Service↔Therapist Capability stays the direct mapping (ADR-0001).
 model Qualification {
   id        String   @id @default(cuid())
-  nameDe    String
-  nameEn    String
+  name      Json // LocalizedText { de, en, fr?, it?, es? } shown on the public team page
   createdAt DateTime @default(now()) @db.Timestamptz(3)
   updatedAt DateTime @updatedAt @db.Timestamptz(3)
 

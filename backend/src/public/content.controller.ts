@@ -1,5 +1,7 @@
 import { Controller, Get } from '@nestjs/common';
+import type { LocalizedText } from '@praxis-buchung/config';
 import { PrismaService } from '../prisma/prisma.service.js';
+import { asLocalizedText } from '../common/localized-text.js';
 import { isActive } from './active-range.js';
 
 /** A bookable service as shown on the public services page. */
@@ -7,14 +9,12 @@ export interface PublicService {
   id: string;
   name: string;
   durationMin: number;
-  descriptionDe: string | null;
-  descriptionEn: string | null;
+  description: LocalizedText | null;
 }
 
 /** A credential shown under a team member. */
 export interface PublicQualification {
-  nameDe: string;
-  nameEn: string;
+  name: LocalizedText | null;
 }
 
 /** An active team member as shown on the public team page. */
@@ -23,16 +23,16 @@ export interface PublicTeamMember {
   firstName: string;
   lastName: string;
   title: string | null;
-  roleDe: string | null;
-  roleEn: string | null;
+  role: LocalizedText | null;
   photoUrl: string | null;
   qualifications: PublicQualification[];
 }
 
 /**
  * Public, read-only content served from the database (the source of truth for
- * operational data, per ADR-0001). Both language variants are returned; the
- * frontend picks one by the current UI language, so switching needs no refetch.
+ * operational data, per ADR-0001). Localized text is returned as a per-locale map
+ * (ADR-0015); the frontend's `pick()` resolves the active UI language with a
+ * fallback chain, so switching language needs no refetch.
  */
 @Controller('api/public')
 export class PublicContentController {
@@ -48,8 +48,7 @@ export class PublicContentController {
       id: service.id,
       name: service.name,
       durationMin: service.durationMin,
-      descriptionDe: service.descriptionDe,
-      descriptionEn: service.descriptionEn,
+      description: asLocalizedText(service.description),
     }));
   }
 
@@ -70,15 +69,11 @@ export class PublicContentController {
         firstName: therapist.firstName,
         lastName: therapist.lastName,
         title: therapist.title,
-        roleDe: therapist.roleDe,
-        roleEn: therapist.roleEn,
+        role: asLocalizedText(therapist.role),
         photoUrl: therapist.photoUrl,
         qualifications: therapist.qualifications
-          .map((tq) => ({
-            nameDe: tq.qualification.nameDe,
-            nameEn: tq.qualification.nameEn,
-          }))
-          .sort((a, b) => a.nameDe.localeCompare(b.nameDe)),
+          .map((tq) => ({ name: asLocalizedText(tq.qualification.name) }))
+          .sort((a, b) => (a.name?.de ?? '').localeCompare(b.name?.de ?? '')),
       }));
   }
 }

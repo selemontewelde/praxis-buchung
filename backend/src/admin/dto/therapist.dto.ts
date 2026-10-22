@@ -1,12 +1,16 @@
+import { Type } from 'class-transformer';
 import {
   ArrayUnique,
   IsArray,
+  IsDefined,
   IsISO8601,
   IsOptional,
   IsString,
   MinLength,
   ValidateIf,
+  ValidateNested,
 } from 'class-validator';
+import { LocalizedTextDto } from './localized-text.dto.js';
 
 export class CreateTherapistDto {
   @IsString()
@@ -21,13 +25,10 @@ export class CreateTherapistDto {
   @IsString()
   title?: string;
 
-  @IsString()
-  @MinLength(1)
-  roleDe!: string;
-
-  @IsString()
-  @MinLength(1)
-  roleEn!: string;
+  @IsDefined()
+  @ValidateNested()
+  @Type(() => LocalizedTextDto)
+  role!: LocalizedTextDto;
 
   @IsOptional()
   @IsString()
@@ -59,14 +60,9 @@ export class UpdateTherapistDto {
   title?: string;
 
   @IsOptional()
-  @IsString()
-  @MinLength(1)
-  roleDe?: string;
-
-  @IsOptional()
-  @IsString()
-  @MinLength(1)
-  roleEn?: string;
+  @ValidateNested()
+  @Type(() => LocalizedTextDto)
+  role?: LocalizedTextDto;
 
   @IsOptional()
   @IsString()
